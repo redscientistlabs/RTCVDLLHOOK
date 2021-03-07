@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XemuVanguard-Hook", "XemuVanguard-Hook.csproj", "{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B81E354A-DC15-4046-9A84-0147AFFA4F5F} = {B81E354A-DC15-4046-9A84-0147AFFA4F5F}
+		{E413A452-1E0E-42B9-B816-7A3E5087A9E9} = {E413A452-1E0E-42B9-B816-7A3E5087A9E9}
+		{80774A70-E01F-4D88-874C-504FE3E05AFD} = {80774A70-E01F-4D88-874C-504FE3E05AFD}
+		{A8AC737A-48CB-4BD5-9F4D-21F0B2323747} = {A8AC737A-48CB-4BD5-9F4D-21F0B2323747}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "..\RTCV\Source\Libraries\Common\Common.csproj", "{A8AC737A-48CB-4BD5-9F4D-21F0B2323747}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorruptCore", "..\RTCV\Source\Libraries\CorruptCore\CorruptCore.csproj", "{B81E354A-DC15-4046-9A84-0147AFFA4F5F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCore", "..\RTCV\Source\Libraries\NetCore\NetCore.csproj", "{E413A452-1E0E-42B9-B816-7A3E5087A9E9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard", "..\RTCV\Source\Libraries\Vanguard\Vanguard.csproj", "{80774A70-E01F-4D88-874C-504FE3E05AFD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RTCV", "RTCV", "{FDC68679-B969-486B-A49D-B43B5ED89737}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Xemu", "Xemu", "{903CDED1-5D75-467B-A6B3-7B547EAB714D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8AC737A-48CB-4BD5-9F4D-21F0B2323747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8AC737A-48CB-4BD5-9F4D-21F0B2323747}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8AC737A-48CB-4BD5-9F4D-21F0B2323747}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8AC737A-48CB-4BD5-9F4D-21F0B2323747}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B81E354A-DC15-4046-9A84-0147AFFA4F5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B81E354A-DC15-4046-9A84-0147AFFA4F5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B81E354A-DC15-4046-9A84-0147AFFA4F5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B81E354A-DC15-4046-9A84-0147AFFA4F5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E413A452-1E0E-42B9-B816-7A3E5087A9E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E413A452-1E0E-42B9-B816-7A3E5087A9E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E413A452-1E0E-42B9-B816-7A3E5087A9E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E413A452-1E0E-42B9-B816-7A3E5087A9E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80774A70-E01F-4D88-874C-504FE3E05AFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80774A70-E01F-4D88-874C-504FE3E05AFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80774A70-E01F-4D88-874C-504FE3E05AFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80774A70-E01F-4D88-874C-504FE3E05AFD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A} = {903CDED1-5D75-467B-A6B3-7B547EAB714D}
+		{A8AC737A-48CB-4BD5-9F4D-21F0B2323747} = {FDC68679-B969-486B-A49D-B43B5ED89737}
+		{B81E354A-DC15-4046-9A84-0147AFFA4F5F} = {FDC68679-B969-486B-A49D-B43B5ED89737}
+		{E413A452-1E0E-42B9-B816-7A3E5087A9E9} = {FDC68679-B969-486B-A49D-B43B5ED89737}
+		{80774A70-E01F-4D88-874C-504FE3E05AFD} = {FDC68679-B969-486B-A49D-B43B5ED89737}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F6818051-BEE2-4E9B-A542-37EB489BC743}
+	EndGlobalSection
+EndGlobal
