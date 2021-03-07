@@ -23,7 +23,7 @@ namespace XemuVanguardHook
 		public static string[] args;
         public static System.Timers.Timer focusTimer;
         public static bool FirstConnect = true;
-
+		public static Form SyncForm;
         public static VanguardRealTimeEvents RTE_API = new VanguardRealTimeEvents();
         public static bool attached = false;
 		public static string System
@@ -79,9 +79,9 @@ namespace XemuVanguardHook
         {
 			var partial = new PartialSpec("VanguardSpec");
 			partial[VSPEC.NAME] = "XEMU";
-			partial[VSPEC.SYSTEM] = String.Empty;
-			partial[VSPEC.GAMENAME] = String.Empty;
-			partial[VSPEC.SYSTEMPREFIX] = String.Empty;
+			partial[VSPEC.SYSTEM] = "XBOX";
+			partial[VSPEC.GAMENAME] = "IGNORE";
+			partial[VSPEC.SYSTEMPREFIX] = "XBOX";
 			partial[VSPEC.OPENROMFILENAME] = "IGNORE";
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
 			partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = new string[] { };
@@ -126,7 +126,9 @@ namespace XemuVanguardHook
 		}
 		public static void Start()
 		{
+			SyncForm = new Form();
 			//Grab an object on the main thread to use for netcore invokes
+			SyncObjectSingleton.SyncObject = SyncForm;
 			SyncObjectSingleton.EmuThreadIsMainThread = true;
 
 			//Start everything

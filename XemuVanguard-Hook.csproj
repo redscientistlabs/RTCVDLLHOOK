@@ -29,13 +29,14 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RegisterForComInterop>false</RegisterForComInterop>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>
     </StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EasyHook, Version=2.7.7097.0, Culture=neutral, PublicKeyToken=4b580fca19d0b0c5, processorArchitecture=MSIL">
@@ -93,10 +94,13 @@
     <Content Include="EasyLoad64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="opengl32.dll" />
     <Content Include="xemu.exe" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RTCV\Source\Frontend\UI\UI.csproj">
+      <Project>{d0b27ca3-ad13-4907-8357-7e1f3407fb4a}</Project>
+      <Name>UI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RTCV\Source\Libraries\Common\Common.csproj">
       <Project>{a8ac737a-48cb-4bd5-9f4d-21f0b2323747}</Project>
       <Name>Common</Name>

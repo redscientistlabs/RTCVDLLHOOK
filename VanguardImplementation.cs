@@ -5,48 +5,45 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using OpenGL;
 using EasyHook;
 using RTCV.Common;
 using RTCV.CorruptCore;
 using RTCV.NetCore;
 using RTCV.Vanguard;
+using RTCV.UI;
+using RTCV.NetCore.Commands;
 
 namespace XemuVanguardHook
 {
 	public class MemoryDomainCPUMemory : IMemoryDomain
     {
-		public string Name { get; }
+		public string Name => "MainCPU";
 		public bool BigEndian => false;
-		public long Size { get; }
+		public long Size => (128 * 1024 * 1024); //make the size 128MB for now; we are just testing this on xemu at the moment
 		public int WordSize => 4;
-
-        public override string ToString()
+		public override string ToString() => Name;
+        public MemoryDomainCPUMemory()
         {
-			return Name;
+			
         }
-		public MemoryDomainCPUMemory()
-        {
-			Name = "Main CPU";
-			Size = 128 * 1024 * 1024; //make the size 128MB for now; we are just testing this on xemu at the moment
-        }
-		public void PokeByte(long address, byte data)
+		public void PokeByte(long address, byte val)
         {
 			if(address > Size)
             {
 				return;
             }
-			VanguardImplementation.GPA_WRITEB(Convert.ToUInt32(address), data);
+			VanguardImplementation.GPA_WRITEB(Convert.ToUInt32(address), val);
         }
-		public byte PeekByte(long address)
+		public byte PeekByte(long addr)
         {
-			if(address > Size)
+			if(addr > Size)
             {
 				return 0;
             }
-			byte buffer = 0;
-			VanguardImplementation.GPA_READB(Convert.ToUInt32(address), buffer);
-			return buffer;
+			uint buffer = 0;
+			return (byte)VanguardImplementation.GPA_READB(Convert.ToUInt32(addr), buffer);
         }
 		public byte[] PeekBytes(long address, int length)
         {
@@ -60,13 +57,21 @@ namespace XemuVanguardHook
     public class VanguardImplementation
     {
 
-        [DllImport("xemu.exe", EntryPoint = "gpa_readb")]
-        public static extern void GPA_READB(uint addr, uint buf);
-        [DllImport("xemu.exe", EntryPoint = "gpa_writeb")]
-        public static extern void GPA_WRITEB(uint addr, uint buf);
-        //[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
-        //delegate
-        public static RTCV.Vanguard.VanguardConnector connector = null;
+        [DllImport("xemu.exe")]
+        public static extern uint gpa_readb(uint addr, uint buf);
+        [DllImport("xemu.exe")]
+        public static extern void gpa_writeb(uint addr, uint buf);
+		public static uint GPA_READB(uint addr, uint buf)
+        {
+			return gpa_readb(addr, buf);
+		}
+		public static void GPA_WRITEB(uint addr, uint buf)
+		{
+			gpa_writeb(addr, buf);
+		}
+		//[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
+		//delegate
+		public static RTCV.Vanguard.VanguardConnector connector = null;
         public static void StartClient()
         {
             try
@@ -77,6 +82,9 @@ namespace XemuVanguardHook
                 spec.Attached = VanguardCore.attached;
                 spec.MessageReceived += OnMessageRecieved;
                 connector = new RTCV.Vanguard.VanguardConnector(spec);
+				//while(true)
+    //            {
+    //            }
             }
             catch (Exception ex)
             {
@@ -121,7 +129,7 @@ namespace XemuVanguardHook
 					{
 						if (VanguardCore.FirstConnect)
 						{
-							//SyncObjectSingleton.FormExecute(() => { VanguardCore.LoadDefaultAndShowBizhawkForm(); });
+							SyncObjectSingleton.FormExecute(() => { ; });
 							
 							VanguardCore.FirstConnect = false;
 						}
@@ -155,7 +163,10 @@ namespace XemuVanguardHook
 					break;
 
 				case RTCV.NetCore.Commands.Remote.DomainGetDomains:
-					RefreshDomains();
+					SyncObjectSingleton.FormExecute(() =>
+					{
+						e.setReturnValue(GetInterfaces());
+					});
 					break;
 
 				case RTCV.NetCore.Commands.Remote.DomainRefreshDomains:
@@ -165,13 +176,6 @@ namespace XemuVanguardHook
 				case RTCV.NetCore.Commands.Remote.KeySetSyncSettings:
 					//SyncObjectSingleton.FormExecute(() => { Hooks.BIZHAWK_GETSET_SYNCSETTINGS = (string)advancedMessage.objectValue; });
 					break;
-
-				case RTCV.NetCore.Commands.Remote.KeySetSystemCore:
-					{
-						;
-					}
-					break;
-
 
 				case RTCV.NetCore.Commands.Emulator.GetRealtimeAPI:
 					e.setReturnValue(VanguardCore.RTE_API);
@@ -195,7 +199,9 @@ namespace XemuVanguardHook
 					//			RTC_GameProtection.Start();
 
 					break;
-
+				case RTCV.NetCore.Commands.Remote.OpenHexEditor:
+					SyncObjectSingleton.FormExecute(() => LocalNetCoreRouter.Route("HEXEDITOR", Remote.OpenHexEditor, true));
+					break;
 				case RTCV.NetCore.Commands.Remote.EventCloseEmulator:
 					Environment.Exit(-1);
 					break;

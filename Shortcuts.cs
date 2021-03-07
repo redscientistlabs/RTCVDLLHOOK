@@ -15,8 +15,9 @@ namespace XemuVanguardHook
             STEP_CORRUPT();
         }
 
-        private static void STEP_CORRUPT()
+        public static void STEP_CORRUPT()
         {
+            StepActions.Execute();
             RtcClock.StepCorrupt(true, true);
         }
         [DllExport("InitVanguard")] 
