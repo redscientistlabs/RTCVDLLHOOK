@@ -14,6 +14,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Diagnostics;
 using Timer = System.Threading.Timer;
+using System.Linq;
 
 namespace XemuVanguardHook
 {
@@ -26,6 +27,7 @@ namespace XemuVanguardHook
 		public static Form SyncForm;
         public static VanguardRealTimeEvents RTE_API = new VanguardRealTimeEvents();
         public static bool attached = false;
+		public static Process xemu;
 		public static string System
 		{
 			get => (string)AllSpec.VanguardSpec[VSPEC.SYSTEM];
@@ -74,7 +76,7 @@ namespace XemuVanguardHook
 		public static string emuDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 		public static string logPath = Path.Combine(emuDir, "EMU_LOG.txt");
 		public static string RTCVHookOGLVersion = "0.0.1";
-
+		
         public static PartialSpec getDefaultPartial()
         {
 			var partial = new PartialSpec("VanguardSpec");
@@ -124,18 +126,22 @@ namespace XemuVanguardHook
 			LocalNetCoreRouter.Route(RTCV.NetCore.Endpoints.CorruptCore, RTCV.NetCore.Commands.Remote.PushVanguardSpecUpdate, partial, true);
 			LocalNetCoreRouter.Route(RTCV.NetCore.Endpoints.UI, RTCV.NetCore.Commands.Remote.PushVanguardSpecUpdate, partial, true);
 		}
+		public static void EmuThreadExecute(Action callback)
+        {
+			SyncObjectSingleton.EmuThreadExecute(callback, true);
+        }
 		public static void Start()
 		{
-			SyncForm = new Form();
+			xemu = Process.GetProcessesByName("xemu").First<Process>();
+			SyncForm = new TestForm();
 			//Grab an object on the main thread to use for netcore invokes
 			SyncObjectSingleton.SyncObject = SyncForm;
 			SyncObjectSingleton.EmuThreadIsMainThread = true;
-
 			//Start everything
 			VanguardImplementation.StartClient();
 			VanguardCore.RegisterVanguardSpec();
 			RtcCore.StartEmuSide();
-
+			Thread.Sleep(500);
 
 			focusTimer = new System.Timers.Timer
 			{
@@ -154,6 +160,7 @@ namespace XemuVanguardHook
 				{
 					var state = Form.ActiveForm != null;
 					//Console.WriteLine(state);
+					Shortcuts.STEP_CORRUPT();
 					if (((bool?)RTCV.NetCore.AllSpec.VanguardSpec?[RTCV.NetCore.Commands.Emulator.InFocus] ?? true) != state)
 						RTCV.NetCore.AllSpec.VanguardSpec?.Update(RTCV.NetCore.Commands.Emulator.InFocus, state, true, false);
 				}
@@ -168,17 +175,6 @@ namespace XemuVanguardHook
 			//If it's attached, lie to vanguard
 			if (VanguardCore.attached)
 				VanguardConnector.ImplyClientConnected();
-		}
-		public static string SaveSavestate(string Key, bool threadSave = false)
-        {
-			//nothing here for now
-			return "";
-        }
-
-		public static bool LoadSavestate(string path, StashKeySavestateLocation stateLocation = StashKeySavestateLocation.DEFAULTVALUE)
-		{
-			//nothing here for now
-			return false;
 		}
 
 	}
