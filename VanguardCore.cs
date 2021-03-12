@@ -96,6 +96,7 @@ namespace XemuVanguardHook
 			partial[VSPEC.SUPPORTS_REALTIME] = true;
 			partial[VSPEC.SUPPORTS_SAVESTATES] = true;
 			partial[VSPEC.SUPPORTS_REFERENCES] = true;
+			partial[VSPEC.CORE_DISKBASED] = true;
 			partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = true;
 			partial[VSPEC.CONFIG_PATHS] = new[] { Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "xemu", "xemu", "xemu.ini") };
 			partial[VSPEC.EMUDIR] = emuDir;
@@ -130,6 +131,22 @@ namespace XemuVanguardHook
         {
 			SyncObjectSingleton.EmuThreadExecute(callback, true);
         }
+		public static void LOAD_GAME_START(string dvdpath)
+        {
+			StepActions.ClearStepBlastUnits();
+			RtcClock.ResetCount();
+			VanguardImplementation.LoadDVD(dvdpath);
+			LOAD_GAME_DONE();
+        }
+		public static void LOAD_GAME_DONE()
+		{
+			PartialSpec gameDone = new PartialSpec("VanguardSpec");
+			VanguardImplementation.RefreshDomains();
+			gameDone[VSPEC.GAMENAME] = VanguardImplementation.GetGameName();
+			gameDone[VSPEC.OPENROMFILENAME] = VanguardImplementation.vanguard_getDVDPath();
+			AllSpec.VanguardSpec.Update(gameDone);
+			RtcCore.InvokeLoadGameDone();
+		}
 		public static void Start()
 		{
 			xemu = Process.GetProcessesByName("xemu").First<Process>();
@@ -142,7 +159,7 @@ namespace XemuVanguardHook
 			VanguardCore.RegisterVanguardSpec();
 			RtcCore.StartEmuSide();
 			Thread.Sleep(500);
-
+			//LOAD_GAME_DONE();
 			focusTimer = new System.Timers.Timer
 			{
 				AutoReset = true,

@@ -141,11 +141,25 @@ namespace XemuVanguardHook
 		[DllImport("xemu.exe")]
 		public static extern void gpa_writeb(long addr, uint buf);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void vanguard_savevm_state(string filename);
+        public static unsafe extern void vanguard_savevm_state(char* cmd);
+        [DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+        public static unsafe extern void vanguard_loadvm_state(char* cmd);
+        [DllImport("xemu.exe")]
+        public static extern int vanguard_getMemorySize();
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
-		public static extern int vanguard_loadvm_state(string filename);
-		[DllImport("xemu.exe")]
-		public static extern int vanguard_getMemorySize();
+		public static extern void vanguard_setMemorySize(int size);
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		public static extern string vanguard_getHDDPath();
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		public static extern void vanguard_setHDDPath(string path);
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		public static extern string vanguard_getDVDPath();
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		public static extern void vanguard_setDVDPath(string path);
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		public static unsafe extern void vanguard_setMainThreadCommand(char* command);
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		public static unsafe extern void vanguard_setMainThreadCommandCharArg(char* arg);
 		public static uint GPA_READB(long addr, uint buf)
         {
 			return gpa_readb(addr, buf);
@@ -154,23 +168,30 @@ namespace XemuVanguardHook
 		{
 			gpa_writeb(addr, buf);
 		}
-		public static void SaveVMState(string filename)
+		public static unsafe void SaveVMState(string filename)
         {
-			vanguard_savevm_state(filename);
-        }
-		public static void LoadVMState(string filename)
+			//vanguard_savevm_state(filename);
+			string cmd = "savevm " + filename;
+			vanguard_savevm_state((char*)Marshal.StringToHGlobalAnsi(cmd).ToPointer());
+			Thread.Sleep(1000);
+		}
+		public static unsafe void LoadVMState(string filename)
 		{
-			vanguard_loadvm_state(filename);
+			//vanguard_loadvm_state(filename);
+			string cmd = "loadvm " + filename;
+			vanguard_loadvm_state((char*)Marshal.StringToHGlobalAnsi(cmd).ToPointer());
+			Thread.Sleep(1000);
 		}
 		public static string SaveSavestate(string Key, bool threadSave = false)
 		{
 			string quickSlotName = Key + ".timejump";
 			string prefix = VanguardCore.GameName;
-			//Since I can't figure out how to save vm states outside of the hdd file, I'll just save them internally for now, but that makes it impossible to share the states
+			//Since I can't figure out how to save vm states outside of the hdd file,
+			//I'll just save them internally for now, but that makes it impossible to share the states.
 			//well, since they save the state of the hdd (I think) too they would be copyrighted files anyway
 			string path = Path.Combine(RtcCore.workingDir, "SESSION", prefix + "." + quickSlotName + ".State");
 			File.Create(path); //make dummy savestate file
-			VanguardImplementation.SaveVMState(Key);
+			//VanguardImplementation.SaveVMState(Key);
 			return path;
 		}
 
@@ -183,8 +204,31 @@ namespace XemuVanguardHook
 			int startPos = path.LastIndexOf(prefix) + prefix.Length + 1;
 			int length = path.IndexOf(".timejump") - startPos;
 			string Key = path.Substring(startPos, length);
-			VanguardImplementation.LoadVMState(Key);
+			//VanguardImplementation.LoadVMState(Key);
 			return true;
+		}
+		public static string SaveDrive()
+        {
+			string drivepath = vanguard_getHDDPath();
+			System.IO.FileInfo fi = new FileInfo(drivepath);
+			string key = $"HDD_{RtcCore.GetRandomKey()}.{fi.Extension}";
+			string destdrivepath = Path.Combine(RtcCore.workingDir, "SESSION", key);
+			System.IO.File.Copy(drivepath, destdrivepath);
+			return destdrivepath;
+        }
+		public void LoadDrive(string packagepath)
+        {
+			vanguard_setHDDPath(packagepath);
+		}
+		public static string GetGameName()
+		{
+			string dvdpath = vanguard_getDVDPath();
+			FileInfo fi = new FileInfo(dvdpath);
+			return fi.Name.Substring(fi.Name.IndexOf(fi.Extension));
+		}
+		public static void LoadDVD(string dvd)
+		{
+			vanguard_setDVDPath(dvd);
 		}
 		//[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
 		//delegate
@@ -233,10 +277,10 @@ namespace XemuVanguardHook
 			MemoryDomainNV2A geforce3reg = new MemoryDomainNV2A();
 			interfaces.Add(new MemoryDomainProxy(geforce3reg));
 			//MemoryDomainAPU apureg = new MemoryDomainAPU(); //for some reason, xemu's code for reading and writing to the apu
-															//REQUIRES that the value be 32-bit. There's an assert function that
+															 //REQUIRES that the value be 32-bit. There's an assert function that
 															//IGNORES the fact I globally disabled all assertions and crashes
-															//whenever the value is 8-bit.
-															//So I'll just comment this out for now :(
+														   //whenever the value is 8-bit.
+														  //So I'll just comment this out for now :(
 			//interfaces.Add(new MemoryDomainProxy(apureg));
 			return interfaces.ToArray();
 			
@@ -276,8 +320,8 @@ namespace XemuVanguardHook
 
 				case RTCV.NetCore.Commands.Remote.LoadROM:
 					{
-						//var fileName = advancedMessage.objectValue as string;
-						//SyncObjectSingleton.FormExecute(() => { VanguardCore.LoadRom_NET(fileName); });
+						var fileName = advancedMessage.objectValue as string;
+						//VanguardCore.LOAD_GAME_START(fileName);
 						
 					}
 					break;

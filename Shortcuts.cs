@@ -25,5 +25,10 @@ namespace XemuVanguardHook
         {
             VanguardCore.Start();
         }
+        [DllExport("LOADGAMEDONE")]
+        public static void LOADGAMEDONE()
+        {
+            VanguardCore.LOAD_GAME_DONE();
+        }
     }
 }
