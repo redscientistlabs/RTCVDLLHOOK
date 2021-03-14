@@ -59,7 +59,7 @@ namespace XemuVanguardHook
 	{
 		public string Name => "NV2A Registers";
 		public bool BigEndian => false;
-		public long Size => 0xFFFFFF;
+		public long Size => 0xFFFFFF+1;
 		public int WordSize => 4;
 		public override string ToString() => Name;
 		public MemoryDomainNV2A()
@@ -168,12 +168,13 @@ namespace XemuVanguardHook
 		{
 			gpa_writeb(addr, buf);
 		}
-		public static unsafe void SaveVMState(string filename)
+		public static unsafe void SaveVMState(string filename, string realfilepath)
         {
 			//vanguard_savevm_state(filename);
 			string cmd = "savevm " + filename;
 			vanguard_savevm_state((char*)Marshal.StringToHGlobalAnsi(cmd).ToPointer());
 			Thread.Sleep(1000);
+			File.WriteAllText(realfilepath, filename);
 		}
 		public static unsafe void LoadVMState(string filename)
 		{
@@ -191,7 +192,7 @@ namespace XemuVanguardHook
 			//well, since they save the state of the hdd (I think) too they would be copyrighted files anyway
 			string path = Path.Combine(RtcCore.workingDir, "SESSION", prefix + "." + quickSlotName + ".State");
 			File.Create(path); //make dummy savestate file
-			//VanguardImplementation.SaveVMState(Key);
+			//VanguardImplementation.SaveVMState(Key, path);
 			return path;
 		}
 
@@ -199,11 +200,7 @@ namespace XemuVanguardHook
 		{
 			StepActions.ClearStepBlastUnits();
 			RtcClock.ResetCount();
-			string sessiondir = Path.Combine(RtcCore.workingDir, "SESSION");
-			string prefix = sessiondir + "\\" + VanguardCore.GameName + ".";
-			int startPos = path.LastIndexOf(prefix) + prefix.Length + 1;
-			int length = path.IndexOf(".timejump") - startPos;
-			string Key = path.Substring(startPos, length);
+			//string Key = File.ReadAllText(path);
 			//VanguardImplementation.LoadVMState(Key);
 			return true;
 		}

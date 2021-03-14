@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using Timer = System.Threading.Timer;
 using System.Linq;
+using System.Windows.Threading;
 
 namespace XemuVanguardHook
 {
@@ -150,10 +151,18 @@ namespace XemuVanguardHook
 		public static void Start()
 		{
 			xemu = Process.GetProcessesByName("xemu").First<Process>();
-			SyncForm = new TestForm();
+			//ProcessThread mainthread = (ProcessThread)xemu.Threads.GetEnumerator().Current;
+			SyncForm = new Form();
 			//Grab an object on the main thread to use for netcore invokes
+			Dispatcher.CurrentDispatcher.Invoke((MethodInvoker)delegate
+			{
+				SyncForm.Show();
+				SyncForm.Activate();
+			}, null);
 			SyncObjectSingleton.SyncObject = SyncForm;
-			SyncObjectSingleton.EmuThreadIsMainThread = true;
+			//SyncObjectSingleton.EmuInvokeDelegate = Dispatcher.;
+			//SyncForm.Show();
+			//SyncForm.Activate();
 			//Start everything
 			VanguardImplementation.StartClient();
 			VanguardCore.RegisterVanguardSpec();

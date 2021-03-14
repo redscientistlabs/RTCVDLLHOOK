@@ -31,6 +31,7 @@ namespace XemuVanguardHook
         {
             this.btnClearBlastUnits = new System.Windows.Forms.Button();
             this.btnRestart = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnClearBlastUnits
@@ -53,11 +54,22 @@ namespace XemuVanguardHook
             this.btnRestart.UseVisualStyleBackColor = true;
             this.btnRestart.Click += new System.EventHandler(this.btnRestart_Click);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(214, 2);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(100, 23);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "Restart Xemu";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.btnRestart_Click);
+            // 
             // TestForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(306, 93);
+            this.ClientSize = new System.Drawing.Size(316, 93);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.btnRestart);
             this.Controls.Add(this.btnClearBlastUnits);
             this.Name = "TestForm";
@@ -70,5 +82,6 @@ namespace XemuVanguardHook
 
         private System.Windows.Forms.Button btnClearBlastUnits;
         private System.Windows.Forms.Button btnRestart;
+        private System.Windows.Forms.Button button1;
     }
 }
