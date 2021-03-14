@@ -294,7 +294,7 @@ namespace XemuVanguardHook
                 return;
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			gameDone[VSPEC.MEMORYDOMAINS_INTERFACES] = GetInterfaces();
-			gameDone[VSPEC.GAMENAME] = GetGameName();
+			//gameDone[VSPEC.GAMENAME] = GetGameName();
 			AllSpec.VanguardSpec.Update(gameDone);
 			LocalNetCoreRouter.Route(RTCV.NetCore.Endpoints.CorruptCore, RTCV.NetCore.Commands.Remote.EventDomainsUpdated, true, true);
 		}
