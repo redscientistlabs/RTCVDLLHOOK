@@ -130,8 +130,12 @@ namespace XemuVanguardHook
 		}
 		public static void EmuThreadExecute(Action callback)
         {
-			SyncObjectSingleton.EmuThreadExecute(callback, true);
-        }
+			Dispatcher.CurrentDispatcher.Invoke((MethodInvoker)delegate
+			{
+				callback();
+			}, null);
+
+		}
 		public static void LOAD_GAME_START(string dvdpath)
         {
 			StepActions.ClearStepBlastUnits();
@@ -144,7 +148,7 @@ namespace XemuVanguardHook
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			VanguardImplementation.RefreshDomains();
 			gameDone[VSPEC.GAMENAME] = VanguardImplementation.GetGameName();
-			gameDone[VSPEC.OPENROMFILENAME] = VanguardImplementation.vanguard_getDVDPath();
+			//gameDone[VSPEC.OPENROMFILENAME] = VanguardImplementation.GetDVD();
 			AllSpec.VanguardSpec.Update(gameDone);
 			RtcCore.InvokeLoadGameDone();
 		}
@@ -160,7 +164,8 @@ namespace XemuVanguardHook
 				SyncForm.Activate();
 			}, null);
 			SyncObjectSingleton.SyncObject = SyncForm;
-			//SyncObjectSingleton.EmuInvokeDelegate = Dispatcher.;
+			//SyncObjectSingleton.EmuInvokeDelegate = new SyncObjectSingleton.ActionDelegate(EmuThreadExecute);
+			SyncObjectSingleton.EmuThreadIsMainThread = true;
 			//SyncForm.Show();
 			//SyncForm.Activate();
 			//Start everything
@@ -168,7 +173,6 @@ namespace XemuVanguardHook
 			VanguardCore.RegisterVanguardSpec();
 			RtcCore.StartEmuSide();
 			Thread.Sleep(500);
-			//LOAD_GAME_DONE();
 			focusTimer = new System.Timers.Timer
 			{
 				AutoReset = true,
@@ -186,7 +190,7 @@ namespace XemuVanguardHook
 				{
 					var state = Form.ActiveForm != null;
 					//Console.WriteLine(state);
-					Shortcuts.STEP_CORRUPT();
+					//Shortcuts.STEP_CORRUPT();
 					if (((bool?)RTCV.NetCore.AllSpec.VanguardSpec?[RTCV.NetCore.Commands.Emulator.InFocus] ?? true) != state)
 						RTCV.NetCore.AllSpec.VanguardSpec?.Update(RTCV.NetCore.Commands.Emulator.InFocus, state, true, false);
 				}

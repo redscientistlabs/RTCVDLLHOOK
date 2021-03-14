@@ -174,7 +174,7 @@ namespace XemuVanguardHook
 			string cmd = "savevm " + filename;
 			vanguard_savevm_state((char*)Marshal.StringToHGlobalAnsi(cmd).ToPointer());
 			Thread.Sleep(1000);
-			File.WriteAllText(realfilepath, filename);
+			
 		}
 		public static unsafe void LoadVMState(string filename)
 		{
@@ -191,8 +191,9 @@ namespace XemuVanguardHook
 			//I'll just save them internally for now, but that makes it impossible to share the states.
 			//well, since they save the state of the hdd (I think) too they would be copyrighted files anyway
 			string path = Path.Combine(RtcCore.workingDir, "SESSION", prefix + "." + quickSlotName + ".State");
-			File.Create(path); //make dummy savestate file
-			//VanguardImplementation.SaveVMState(Key, path);
+			//File.Create(path); //make dummy savestate file
+			File.WriteAllText(path, prefix + "." + Key); //make a file that points to the savestate in the qcow2
+			VanguardImplementation.SaveVMState(prefix + "." + Key, path);
 			return path;
 		}
 
@@ -200,8 +201,8 @@ namespace XemuVanguardHook
 		{
 			StepActions.ClearStepBlastUnits();
 			RtcClock.ResetCount();
-			//string Key = File.ReadAllText(path);
-			//VanguardImplementation.LoadVMState(Key);
+			string Key = File.ReadAllText(path);
+			VanguardImplementation.LoadVMState(Key);
 			return true;
 		}
 		public static string SaveDrive()
@@ -209,7 +210,7 @@ namespace XemuVanguardHook
 			string drivepath = vanguard_getHDDPath();
 			System.IO.FileInfo fi = new FileInfo(drivepath);
 			string key = $"HDD_{RtcCore.GetRandomKey()}.{fi.Extension}";
-			string destdrivepath = Path.Combine(RtcCore.workingDir, "SESSION", key);
+			string destdrivepath = Path.Combine(RtcCore.workingDir, "VAULT", key);
 			System.IO.File.Copy(drivepath, destdrivepath);
 			return destdrivepath;
         }
@@ -219,14 +220,45 @@ namespace XemuVanguardHook
 		}
 		public static string GetGameName()
 		{
-			string dvdpath = vanguard_getDVDPath();
-			FileInfo fi = new FileInfo(dvdpath);
-			return fi.Name.Substring(fi.Name.IndexOf(fi.Extension));
+			string gamename = "IGNORE";
+			int i = 0;
+			MemoryDomainProxy xboxsdram = MemoryDomains.GetProxy("System Memory", 0);
+			while (i < xboxsdram.Size)
+			{
+				if (xboxsdram.PeekByte(i) == 0x58)
+				{
+					if (xboxsdram.PeekByte(i + 1) == 0x42)
+					{
+						if (xboxsdram.PeekByte(i + 2) == 0x45)
+						{
+							if (xboxsdram.PeekByte(i + 3) == 0x48)
+							{
+								//MessageBox.Show("Found an XBE!");
+								int xbestart = i;
+								int certificateaddress = BitConverter.ToInt32(xboxsdram.PeekBytes(xbestart + 0x0118, xbestart + 0x0118 + 0x4, true), 0) - 0x10000;
+								gamename = System.Text.Encoding.ASCII.GetString(xboxsdram.PeekBytes(xbestart + certificateaddress + 0xC, xbestart + certificateaddress + 0xC + 0x50, true)).Replace("\0", "");
+							}
+						}
+					}
+				}
+				i++;
+			}
+			return gamename;
 		}
+		public static string GetShortGameName()
+        {
+			string gamename = GetGameName();
+			string shortgamename = gamename.Trim().Replace(" ", "").Substring(0, 8);
+			return shortgamename;
+        }
 		public static void LoadDVD(string dvd)
 		{
 			vanguard_setDVDPath(dvd);
 		}
+		public static string GetDVD()
+        {
+			return vanguard_getDVDPath();
+        }
 		//[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
 		//delegate
 		public static RTCV.Vanguard.VanguardConnector connector = null;
@@ -262,6 +294,7 @@ namespace XemuVanguardHook
                 return;
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			gameDone[VSPEC.MEMORYDOMAINS_INTERFACES] = GetInterfaces();
+			gameDone[VSPEC.GAMENAME] = GetGameName();
 			AllSpec.VanguardSpec.Update(gameDone);
 			LocalNetCoreRouter.Route(RTCV.NetCore.Endpoints.CorruptCore, RTCV.NetCore.Commands.Remote.EventDomainsUpdated, true, true);
 		}
@@ -299,6 +332,7 @@ namespace XemuVanguardHook
 							
 							VanguardCore.FirstConnect = false;
 						}
+						//VanguardCore.LOAD_GAME_DONE();
 						RefreshDomains();
 					}
 					break;

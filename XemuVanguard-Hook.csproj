@@ -136,7 +136,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "M:\sourcecode\RTCVDLLHOOK\bin\Release\*.dll" "M:\sourcecode\xemu\dist" /y
-copy "M:\sourcecode\RTCVDLLHOOK\bin\Release\x64\*.dll" "M:\sourcecode\xemu\dist" /y</PostBuildEvent>
+copy "M:\sourcecode\RTCVDLLHOOK\bin\Release\x64\*.dll" "M:\sourcecode\xemu\dist" /y
+copy "M:\sourcecode\RTCVDLLHOOK\RESTARTDETACHEDRTC.bat" "M:\sourcecode\xemu\dist" /y</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <DllExportIdent>D2F4E2A1-B26A-4FFC-9735-CC2D79212167</DllExportIdent>
