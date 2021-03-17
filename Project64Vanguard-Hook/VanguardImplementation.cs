@@ -20,7 +20,7 @@ namespace Project64Vanguard_Hook
 	{
 		public string Name => "RDRAM";
 		public bool BigEndian => false;
-		public long Size => 0x007FFFFF+1;
+		public long Size => 0x7FFFFF+1;
 		public int WordSize => 4;
 		public override string ToString() => Name;
 		public MemoryDomainCPUMemory()
@@ -33,7 +33,7 @@ namespace Project64Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.RDRAM_WRITEB(address, (char)val);
+			VanguardImplementation.RDRAM_WRITEB(address + 0x80000000, (char)val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -42,7 +42,7 @@ namespace Project64Vanguard_Hook
 				return 0;
 			}
 			uint buffer = 0;
-			return (byte)VanguardImplementation.RDRAM_READB(addr, buffer);
+			return (byte)VanguardImplementation.RDRAM_READB(addr+ 0x80000000, buffer);
 		}
 		public byte[] PeekBytes(long address, int length)
 		{
@@ -96,14 +96,11 @@ namespace Project64Vanguard_Hook
 		{
 			string quickSlotName = Key + ".timejump";
 			string prefix = VanguardCore.GameName;
-			//Since I can't figure out how to save vm states outside of the hdd file,
-			//I'll just save them internally for now, but that makes it impossible to share the states.
-			//well, since they save the state of the hdd (I think) too they would be copyrighted files anyway
 			string path = Path.Combine(RtcCore.workingDir, "SESSION", prefix + "." + quickSlotName + ".State");
 			//File.Create(path); //make dummy savestate file
-			VanguardImplementation.SaveVMState();
-			FileInfo fi = new FileInfo(GetStateName());
-			File.Copy(fi.FullName, path);
+			//VanguardImplementation.SaveVMState();
+			//FileInfo fi = new FileInfo(GetStateName());
+			//File.Copy(fi.FullName, path);
 			return path;
 		}
 
@@ -111,10 +108,10 @@ namespace Project64Vanguard_Hook
 		{
 			StepActions.ClearStepBlastUnits();
 			RtcClock.ResetCount();
-			string ogpath = GetStateName();
-			File.Delete(ogpath);
-			File.Copy(path, ogpath);
-			LoadVMState(path);
+			//string ogpath = GetStateName();
+			//File.Delete(ogpath);
+			//File.Copy(path, ogpath);
+			//LoadVMState(path);
 			return true;
 		}
 		
