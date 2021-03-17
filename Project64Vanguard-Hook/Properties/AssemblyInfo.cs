@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("XemuVanguard-Injector")]
+[assembly: AssemblyTitle("Project64Vanguard-Hook")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("XemuVanguard-Injector")]
+[assembly: AssemblyProduct("Project64Vanguard-Hook")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("21f91f3a-93fa-4c38-b06d-db2b3872f254")]
+[assembly: Guid("e2deeaff-6aa7-4b05-a389-533123cc4910")]
 
 // Version information for an assembly consists of the following four values:
 //

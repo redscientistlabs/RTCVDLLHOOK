@@ -16,8 +16,9 @@ using System.Diagnostics;
 using Timer = System.Threading.Timer;
 using System.Linq;
 using System.Windows.Threading;
+//using System.Windows.Threading;
 
-namespace XemuVanguardHook
+namespace Project64Vanguard_Hook
 {
     class VanguardCore
 	{
@@ -81,10 +82,10 @@ namespace XemuVanguardHook
         public static PartialSpec getDefaultPartial()
         {
 			var partial = new PartialSpec("VanguardSpec");
-			partial[VSPEC.NAME] = "XEMU";
-			partial[VSPEC.SYSTEM] = "XBOX";
+			partial[VSPEC.NAME] = "Project64";
+			partial[VSPEC.SYSTEM] = "Nintendo 64";
 			partial[VSPEC.GAMENAME] = "IGNORE";
-			partial[VSPEC.SYSTEMPREFIX] = "XBOX";
+			partial[VSPEC.SYSTEMPREFIX] = "Nintendo 64";
 			partial[VSPEC.OPENROMFILENAME] = "IGNORE";
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
 			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = 100000;
@@ -98,9 +99,9 @@ namespace XemuVanguardHook
 			partial[VSPEC.SUPPORTS_REALTIME] = true;
 			partial[VSPEC.SUPPORTS_SAVESTATES] = true;
 			partial[VSPEC.SUPPORTS_REFERENCES] = true;
-			partial[VSPEC.CORE_DISKBASED] = true;
+			partial[VSPEC.CORE_DISKBASED] = false;
 			partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = true;
-			partial[VSPEC.CONFIG_PATHS] = new[] { Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "xemu", "xemu", "xemu.ini") };
+			partial[VSPEC.CONFIG_PATHS] = new[] { "" };
 			partial[VSPEC.EMUDIR] = emuDir;
 			return partial;
         }
@@ -137,11 +138,11 @@ namespace XemuVanguardHook
 			}, null);
 
 		}
-		public static void LOAD_GAME_START(string dvdpath)
+		public static void LOAD_GAME_START(string rompath)
         {
 			StepActions.ClearStepBlastUnits();
 			RtcClock.ResetCount();
-			VanguardImplementation.LoadDVD(dvdpath);
+			VanguardImplementation.LoadROM(rompath);
 			LOAD_GAME_DONE();
         }
 		public static void LOAD_GAME_DONE()
@@ -155,7 +156,6 @@ namespace XemuVanguardHook
 		}
 		public static void Start()
 		{
-			xemu = Process.GetProcessesByName("xemu").First<Process>();
 			//ProcessThread mainthread = (ProcessThread)xemu.Threads.GetEnumerator().Current;
 			SyncForm = new Form();
 			//Grab an object on the main thread to use for netcore invokes
