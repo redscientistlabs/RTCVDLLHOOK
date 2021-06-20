@@ -91,6 +91,43 @@ namespace RPCS3Vanguard_Hook
 			return returnArray;
 		}
 	}
+	public class MemoryDomainWholeVM : IMemoryDomain
+	{
+		public string Name => "Entire Virtual Memory";
+		public bool BigEndian => true;
+		public long Size => 0x100000000;
+		public int WordSize => 4;
+		public override string ToString() => Name;
+		public MemoryDomainWholeVM()
+		{
+
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.VM_WRITEB(address, (char)val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			uint buffer = 0;
+			return (byte)VanguardImplementation.VM_READB(addr, buffer);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+	}
 	public class VanguardImplementation
     {
 		[DllImport("RPCS3.exe")]
@@ -98,9 +135,13 @@ namespace RPCS3Vanguard_Hook
 		[DllImport("RPCS3.exe")]
 		public static extern void ManagedWrapper_pokebyte(long addr, char val);
 		[DllImport("RPCS3.exe")]
-		public static extern void ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.LPStr)] string SaveFile);
+		public static extern string ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
 		[DllImport("RPCS3.exe")]
-		public static extern void ManagedWrapper_loadsavestate([MarshalAs(UnmanagedType.LPStr)] string SaveFile);
+		public static extern void ManagedWrapper_loadsavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
+		[DllImport("RPCS3.exe")]
+		public static extern void ManagedWrapper_pause();
+		[DllImport("RPCS3.exe")]
+		public static extern void ManagedWrapper_resume();
 
 		public static uint VM_READB(long addr, uint buf)
         {
@@ -112,16 +153,12 @@ namespace RPCS3Vanguard_Hook
 		}
 		public static void SaveVMState(string path)
         {
-			//vanguard_savevm_state(filename);
-			ManagedWrapper_savesavestate(path);
-			Thread.Sleep(1000);
-			
+			//ManagedWrapper_savesavestate(path);
+			File.Create(path); //create dummy file for now, savestate manager isn't working for now
 		}
 		public static void LoadVMState(string filename)
 		{
-			//vanguard_loadvm_state(filename);
-			ManagedWrapper_loadsavestate(filename);
-			Thread.Sleep(1000);
+			//ManagedWrapper_loadsavestate(filename);
 		}
 		public static string GetStateName()
         {
@@ -132,7 +169,7 @@ namespace RPCS3Vanguard_Hook
 			string quickSlotName = Key + ".timejump";
 			string prefix = VanguardCore.GameName;
 			string path = Path.Combine(RtcCore.workingDir, "SESSION", prefix + "." + quickSlotName + ".State");
-			//VanguardImplementation.SaveVMState(path);
+			VanguardImplementation.SaveVMState(path);
 			return path;
 		}
 
@@ -140,7 +177,7 @@ namespace RPCS3Vanguard_Hook
 		{
 			StepActions.ClearStepBlastUnits();
 			RtcClock.ResetCount();
-			//LoadVMState(path);
+			LoadVMState(path);
 			return true;
 		}
 		
@@ -211,6 +248,8 @@ namespace RPCS3Vanguard_Hook
 			interfaces.Add(new MemoryDomainProxy(elfdomn));
 			MemoryDomainUserMemory userMemory = new MemoryDomainUserMemory();
 			interfaces.Add(new MemoryDomainProxy(userMemory));
+			MemoryDomainWholeVM entireVM = new MemoryDomainWholeVM();
+			interfaces.Add(new MemoryDomainProxy(entireVM));
 			return interfaces.ToArray();
 			
         }
@@ -254,6 +293,13 @@ namespace RPCS3Vanguard_Hook
 						//VanguardCore.LOAD_GAME_START(fileName);
 						
 					}
+					break;
+				case RTCV.NetCore.Commands.Remote.PreCorruptAction:
+					SyncObjectSingleton.EmuThreadExecute(ManagedWrapper_pause, true);
+					break;
+
+				case RTCV.NetCore.Commands.Remote.PostCorruptAction:
+					SyncObjectSingleton.EmuThreadExecute(ManagedWrapper_resume, true);
 					break;
 				case RTCV.NetCore.Commands.Remote.CloseGame:
 					{

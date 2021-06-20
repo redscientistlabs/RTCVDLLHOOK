@@ -88,7 +88,7 @@ namespace RPCS3Vanguard_Hook
 			partial[VSPEC.SYSTEMPREFIX] = "PS3";
 			partial[VSPEC.OPENROMFILENAME] = "IGNORE";
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
-			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = 100000;
+			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = 1000000;
 			partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = new string[] { };
 			partial[VSPEC.MEMORYDOMAINS_INTERFACES] = new MemoryDomainProxy[] { };
 			partial[VSPEC.CORE_LASTLOADERROM] = -1;
