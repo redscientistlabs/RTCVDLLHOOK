@@ -19,7 +19,7 @@ namespace RPCS3Vanguard_Hook
 {
 	public class MemoryDomainElfDomain : IMemoryDomain
 	{
-		public string Name => "Main Virtual Memory";
+		public string Name => "00000000-1FFF0000 : ELFs";
 		public bool BigEndian => true;
 		public long Size => 0x1FFF0000;
 		public int WordSize => 4;
@@ -56,7 +56,7 @@ namespace RPCS3Vanguard_Hook
 	}
 	public class MemoryDomainUserMemory : IMemoryDomain
 	{
-		public string Name => "User Memory";
+		public string Name => "20000000-30000000";
 		public bool BigEndian => true;
 		public long Size => 0x10000000;
 		public int WordSize => 4;
@@ -93,7 +93,7 @@ namespace RPCS3Vanguard_Hook
 	}
 	public class MemoryDomainSPUMemory : IMemoryDomain
 	{
-		public string Name => "SPU Reserved Virtual Memory";
+		public string Name => "E0000000-100000000 : SPU Reserved";
 		public bool BigEndian => true;
 		public long Size => 0x20000000;
 		public int WordSize => 4;
@@ -130,7 +130,7 @@ namespace RPCS3Vanguard_Hook
 	}
 	public class MemoryDomainOVLMemory : IMemoryDomain
 	{
-		public string Name => "Overlay Virtual Memory";
+		public string Name => "30000000-40000000 : Overlay";
 		public bool BigEndian => true;
 		public long Size => 0x10000000;
 		public int WordSize => 4;
@@ -167,7 +167,7 @@ namespace RPCS3Vanguard_Hook
 	}
 	public class MemoryDomainMMapper : IMemoryDomain
 	{
-		public string Name => "MMapper Fixed Area";
+		public string Name => "B0000000-C0000000";
 		public bool BigEndian => true;
 		public long Size => 0x10000000;
 		public int WordSize => 4;
@@ -283,7 +283,7 @@ namespace RPCS3Vanguard_Hook
 		[DllImport("RPCS3.exe")]
 		public static extern void ManagedWrapper_pokebyte(long addr, char val);
 		[DllImport("RPCS3.exe")]
-		public static extern string ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
+		public static extern void ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
 		[DllImport("RPCS3.exe")]
 		public static extern void ManagedWrapper_loadsavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
 		[DllImport("RPCS3.exe")]
@@ -301,12 +301,12 @@ namespace RPCS3Vanguard_Hook
 		}
 		public static void SaveVMState(string path)
         {
-			//ManagedWrapper_savesavestate(path);
-			File.Create(path); //create dummy file for now, savestate manager isn't working for now
+			ManagedWrapper_savesavestate(path);
+			//File.Create(path); //create dummy file for now, savestate manager isn't working for now
 		}
 		public static void LoadVMState(string filename)
 		{
-			//ManagedWrapper_loadsavestate(filename);
+			ManagedWrapper_loadsavestate(filename);
 		}
 		public static string GetStateName()
         {
