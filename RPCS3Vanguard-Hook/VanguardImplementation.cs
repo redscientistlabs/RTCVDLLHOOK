@@ -279,7 +279,7 @@ namespace RPCS3Vanguard_Hook
 	public class VanguardImplementation
     {
 		[DllImport("RPCS3.exe")]
-		public static extern char ManagedWrapper_peekbyte(long addr);
+		public static extern byte ManagedWrapper_peekbyte(long addr);
 		[DllImport("RPCS3.exe")]
 		public static extern void ManagedWrapper_pokebyte(long addr, char val);
 		[DllImport("RPCS3.exe")]
