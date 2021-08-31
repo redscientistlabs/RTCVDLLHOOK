@@ -19,7 +19,7 @@ namespace RPCS3Vanguard_Hook
 {
 	public class MemoryDomainElfDomain : IMemoryDomain
 	{
-		public string Name => "00000000-1FFF0000 : ELFs";
+		public string Name => "00010000-1FFF0000 : ELFs";
 		public bool BigEndian => true;
 		public long Size => 0x1FFF0000;
 		public int WordSize => 4;
@@ -44,6 +44,117 @@ namespace RPCS3Vanguard_Hook
 			}
 			uint buffer = 0;
 			return (byte)VanguardImplementation.VM_READB(addr + 0x00010000, buffer);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+	}
+	public class MemoryDomainLocalSegment : IMemoryDomain
+	{
+		public string Name => "40000000-50000000 : PPU/SPU Local Segment";
+		public bool BigEndian => true;
+		public long Size => 0x10000000;
+		public int WordSize => 4;
+		public override string ToString() => Name;
+		public MemoryDomainLocalSegment()
+		{
+
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.VM_WRITEB(address + 0x40000000, (char)val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			uint buffer = 0;
+			return (byte)VanguardImplementation.VM_READB(addr + 0x40000000, buffer);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+	}
+	public class MemoryDomainRSXBuffer : IMemoryDomain
+	{
+		public string Name => "C0000000-D0000000 : RSX Buffer";
+		public bool BigEndian => true;
+		public long Size => 0x10000000;
+		public int WordSize => 4;
+		public override string ToString() => Name;
+		public MemoryDomainRSXBuffer()
+		{
+
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.VM_WRITEB(address + 0xC0000000, (char)val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			uint buffer = 0;
+			return (byte)VanguardImplementation.VM_READB(addr + 0xC0000000, buffer);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+	}
+	public class MemoryDomainStack : IMemoryDomain
+	{
+		public string Name => "D0000000-E0000000 : Stack";
+		public bool BigEndian => true;
+		public long Size => 0x10000000;
+		public int WordSize => 4;
+		public override string ToString() => Name;
+		public MemoryDomainStack()
+		{
+
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.VM_WRITEB(address + 0xD0000000, (char)val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			uint buffer = 0;
+			return (byte)VanguardImplementation.VM_READB(addr + 0xD0000000, buffer);
 		}
 		public byte[] PeekBytes(long address, int length)
 		{
@@ -398,10 +509,16 @@ namespace RPCS3Vanguard_Hook
 			interfaces.Add(new MemoryDomainProxy(userMemory));
 			MemoryDomainOVLMemory oVLMemory = new MemoryDomainOVLMemory();
 			interfaces.Add(new MemoryDomainProxy(oVLMemory));
+			MemoryDomainLocalSegment localSegment = new MemoryDomainLocalSegment();
+			interfaces.Add(new MemoryDomainProxy(localSegment));
 			MemoryDomainHeap heap = new MemoryDomainHeap();
 			interfaces.Add(new MemoryDomainProxy(heap));
 			MemoryDomainMMapper mmapper = new MemoryDomainMMapper();
 			interfaces.Add(new MemoryDomainProxy(mmapper));
+			MemoryDomainRSXBuffer rsxBuffer = new MemoryDomainRSXBuffer();
+			interfaces.Add(new MemoryDomainProxy(rsxBuffer));
+			MemoryDomainStack stack = new MemoryDomainStack();
+			interfaces.Add(new MemoryDomainProxy(stack));
 			MemoryDomainSPUMemory sPUMemory = new MemoryDomainSPUMemory();
 			interfaces.Add(new MemoryDomainProxy(sPUMemory));
 			MemoryDomainWholeVM entireVM = new MemoryDomainWholeVM();
