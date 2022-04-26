@@ -402,6 +402,16 @@ namespace RPCS3Vanguard_Hook
 		[DllImport("RPCS3.exe")]
 		public static extern void ManagedWrapper_resume();
 
+		public static void ReloadState()
+        {
+			var path = Path.Combine(RtcCore.workingDir, "SESSION", "rpcs3tmp.savestat");
+			SyncObjectSingleton.EmuThreadExecute(() =>
+			{
+				ManagedWrapper_savesavestate(path);
+				ManagedWrapper_loadsavestate(path);
+			}, true);
+		}
+
 		public static uint VM_READB(long addr, uint buf)
         {
 			return ManagedWrapper_peekbyte(addr);
@@ -572,7 +582,15 @@ namespace RPCS3Vanguard_Hook
 					break;
 
 				case RTCV.NetCore.Commands.Remote.PostCorruptAction:
-					SyncObjectSingleton.EmuThreadExecute(ManagedWrapper_resume, true);
+                    {
+						//var path = Path.Combine(RtcCore.workingDir, "rpcs3tmp.savestat");
+						SyncObjectSingleton.EmuThreadExecute(() =>
+						{
+							ManagedWrapper_resume();
+							//ManagedWrapper_savesavestate(path);
+							//ManagedWrapper_loadsavestate(path);
+						}, true);
+					}
 					break;
 				case RTCV.NetCore.Commands.Remote.CloseGame:
 					{

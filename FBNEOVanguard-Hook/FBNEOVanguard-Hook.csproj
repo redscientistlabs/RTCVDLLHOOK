@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{797B9674-83FB-4F4E-B9EF-733DE20DE87B}</ProjectGuid>
+    <ProjectGuid>{3D561270-DA4E-4A38-90D3-A5C40F462DC4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RPCS3Vanguard_Hook</RootNamespace>
-    <AssemblyName>RPCS3Vanguard-Hook</AssemblyName>
+    <RootNamespace>FBNEOVanguard_Hook</RootNamespace>
+    <AssemblyName>FBNEOVanguard-Hook</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -33,10 +33,10 @@
   <PropertyGroup>
     <DllExportIdent>2E75296F-2DF2-4D88-9ECD-4D7B8A19B2F4</DllExportIdent>
     <DllExportMetaLibName>DllExport.dll</DllExportMetaLibName>
-    <DllExportNamespace>RPCS3Vanguard_Hook</DllExportNamespace>
-    <DllExportDDNSCecil>true</DllExportDDNSCecil>
+    <DllExportNamespace>FBNEOVanguard_Hook</DllExportNamespace>
+    <DllExportDDNSCecil>false</DllExportDDNSCecil>
     <DllExportSkipOnAnyCpu>false</DllExportSkipOnAnyCpu>
-    <DllExportPlatform>Auto</DllExportPlatform>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DllExportOrdinalsBase>1</DllExportOrdinalsBase>
     <DllExportGenExpLib>true</DllExportGenExpLib>
     <DllExportOurILAsm>true</DllExportOurILAsm>
@@ -44,7 +44,7 @@
     <DllExportLeaveIntermediateFiles>false</DllExportLeaveIntermediateFiles>
     <DllExportTimeout>30000</DllExportTimeout>
     <DllExportPeCheck>2</DllExportPeCheck>
-    <DllExportPatches>1</DllExportPatches>
+    <DllExportPatches>3</DllExportPatches>
     <DllExportPreProcType>0</DllExportPreProcType>
     <DllExportPostProcType>0</DllExportPostProcType>
   </PropertyGroup>
@@ -129,12 +129,4 @@
   <Target Name="DllExportRPkgDynamicImport" BeforeTargets="PostBuildEvent" DependsOnTargets="GetFrameworkPaths" Condition="'$(DllExportModImported)' != 'true' And '$(DllExportRPkgDyn)' != 'false'">
     <MSBuild BuildInParallel="true" UseResultsCache="true" Projects="$(MSBuildProjectFullPath)" Properties="DllExportRPkgDyn=true" Targets="Build" />
   </Target>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>

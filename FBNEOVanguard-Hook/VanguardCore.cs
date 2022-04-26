@@ -18,7 +18,7 @@ using System.Linq;
 using System.Windows.Threading;
 //using System.Windows.Threading;
 
-namespace RPCS3Vanguard_Hook
+namespace FBNEOVanguard_Hook
 {
     class VanguardCore
 	{
@@ -82,10 +82,10 @@ namespace RPCS3Vanguard_Hook
         public static PartialSpec getDefaultPartial()
         {
 			var partial = new PartialSpec("VanguardSpec");
-			partial[VSPEC.NAME] = "RPCS3";
-			partial[VSPEC.SYSTEM] = "PS3";
+			partial[VSPEC.NAME] = "FBNeo";
+			partial[VSPEC.SYSTEM] = "Arcade";
 			partial[VSPEC.GAMENAME] = "IGNORE";
-			partial[VSPEC.SYSTEMPREFIX] = "PS3";
+			partial[VSPEC.SYSTEMPREFIX] = "Arcade";
 			partial[VSPEC.OPENROMFILENAME] = "IGNORE";
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
 			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = 1000000;
@@ -165,14 +165,14 @@ namespace RPCS3Vanguard_Hook
 			//         }, null);
 			//         //IntPtr Handle = SyncForm.Handle;
 			//SyncObjectSingleton.SyncObject = SyncForm;
-			SyncForm = new AnchorForm();
+			SyncForm = new Form();
 			var handle = SyncForm.Handle;
 			SyncObjectSingleton.SyncObject = SyncForm;
 
 			//SyncObjectSingleton.EmuInvokeDelegate = new SyncObjectSingleton.ActionDelegate(EmuThreadExecute);
 			SyncObjectSingleton.EmuThreadIsMainThread = true;
-			SyncForm.Show();
-			SyncForm.Activate();
+			//SyncForm.Show();
+			//SyncForm.Activate();
 			//Start everything
 			VanguardImplementation.StartClient();
 			VanguardCore.RegisterVanguardSpec();

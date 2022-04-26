@@ -1,5 +1,5 @@
 ﻿
-namespace RPCS3Vanguard_Hook
+namespace FBNEOVanguard_Hook
 {
     partial class AnchorForm
     {
@@ -29,33 +29,19 @@ namespace RPCS3Vanguard_Hook
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnSaveLoad = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // btnSaveLoad
-            // 
-            this.btnSaveLoad.Location = new System.Drawing.Point(3, 12);
-            this.btnSaveLoad.Name = "btnSaveLoad";
-            this.btnSaveLoad.Size = new System.Drawing.Size(75, 23);
-            this.btnSaveLoad.TabIndex = 0;
-            this.btnSaveLoad.Text = "Reload";
-            this.btnSaveLoad.UseVisualStyleBackColor = true;
-            this.btnSaveLoad.Click += new System.EventHandler(this.btnSaveLoad_Click);
             // 
             // AnchorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(266, 139);
-            this.Controls.Add(this.btnSaveLoad);
+            this.ClientSize = new System.Drawing.Size(800, 450);
             this.Name = "AnchorForm";
-            this.Text = "Extra Controls";
+            this.Text = "AnchorForm";
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Button btnSaveLoad;
     }
 }
