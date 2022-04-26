@@ -18,16 +18,16 @@ using System.IO;
 
 namespace XemuVanguardHook
 {
-	public class MemoryDomainCPUMemory : IMemoryDomain, ICodeCavable
+	public class MemoryDomainCPUMemory : IMemoryDomain
 	{
 		public string Name => "System Memory";
 		public bool BigEndian => false;
 		public long Size => VanguardImplementation.vanguard_getMemorySize();
 		public int WordSize => 4;
 
-        public ICodeCavesDomain CodeCaves { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		public ICodeCavesDomain CodeCaves { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public override string ToString() => Name;
+		public override string ToString() => Name;
 		public MemoryDomainCPUMemory()
 		{
 
@@ -58,11 +58,55 @@ namespace XemuVanguardHook
 			return returnArray;
 		}
 
-        public byte[] GetMemory()
-        {
+		public byte[] GetMemory()
+		{
 			return PeekBytes(0, (int)Size);
-        }
-    }
+		}
+	}
+	public class MemoryDomainVirtualMemory : IMemoryDomain, ICodeCavable
+	{
+		public string Name => "Virtual Memory";
+		public bool BigEndian => false;
+		public long Size => 0x100000000;
+		public int WordSize => 4;
+
+		public ICodeCavesDomain CodeCaves { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+		public override string ToString() => Name;
+		public MemoryDomainVirtualMemory()
+		{
+
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.gva_writeb((ulong)address, val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			return VanguardImplementation.gva_readb((ulong)addr);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+
+		public byte[] GetMemory()
+		{
+			return /*PeekBytes(0, (int)Size)*/ null;
+		}
+	}
 	public class MemoryDomainNV2A : IMemoryDomain
 	{
 		public string Name => "NV2A Registers";
@@ -144,10 +188,14 @@ namespace XemuVanguardHook
 	public class VanguardImplementation
     {
 
-        [DllImport("xemu.exe")]
-        public static extern byte gpa_readb(long addr, byte buf);
 		[DllImport("xemu.exe")]
-		public static extern void gpa_writeb(long addr, byte buf);
+		public static extern byte gpa_readb(ulong addr, byte buf);
+		[DllImport("xemu.exe")]
+		public static extern void gpa_writeb(ulong addr, byte buf);
+		[DllImport("xemu.exe")]
+		public static extern byte gva_readb(ulong addr);
+		[DllImport("xemu.exe")]
+		public static extern void gva_writeb(ulong addr, byte buf);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void vanguard_savevm_state(char* cmd);
         [DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
@@ -156,25 +204,27 @@ namespace XemuVanguardHook
         public static extern int vanguard_getMemorySize();
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void vanguard_setMemorySize(int size);
-		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		public static extern string vanguard_getHDDPath();
-		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void vanguard_setHDDPath(string path);
-		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		[return: MarshalAs(UnmanagedType.LPWStr)]
+		public static extern void vanguard_setHDDPath([MarshalAs(UnmanagedType.LPStr)] string path);
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		[return: MarshalAs(UnmanagedType.LPWStr)]
 		public static extern string vanguard_getDVDPath();
-		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void vanguard_setDVDPath(string path);
+		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		public static extern void vanguard_setDVDPath([MarshalAs(UnmanagedType.LPStr)] string path);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
 		public static unsafe extern void vanguard_setMainThreadCommand(char* command);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
 		public static unsafe extern void vanguard_setMainThreadCommandCharArg(char* arg);
 		public static byte GPA_READB(long addr, byte buf)
         {
-			return gpa_readb(addr, buf);
+			return gpa_readb((ulong)addr, buf);
 		}
 		public static void GPA_WRITEB(long addr, byte buf)
 		{
-			gpa_writeb(addr, buf);
+			gpa_writeb((ulong)addr, buf);
 		}
 		public static unsafe void SaveVMState(string filename, string realfilepath)
         {
@@ -245,6 +295,7 @@ namespace XemuVanguardHook
 								int xbestart = i;
 								int certificateaddress = BitConverter.ToInt32(xboxsdram.PeekBytes(xbestart + 0x0118, xbestart + 0x0118 + 0x4, true), 0) - 0x10000;
 								gamename = System.Text.Encoding.ASCII.GetString(xboxsdram.PeekBytes(xbestart + certificateaddress + 0xC, xbestart + certificateaddress + 0xC + 0x50, true)).Replace("\0", "");
+								return gamename;
 							}
 						}
 					}
@@ -312,8 +363,10 @@ namespace XemuVanguardHook
 			List<MemoryDomainProxy> interfaces = new List<MemoryDomainProxy>();
 			MemoryDomainCPUMemory cpumem = new MemoryDomainCPUMemory();
 			interfaces.Add(new MemoryDomainProxy(cpumem));
-			MemoryDomainNV2A geforce3reg = new MemoryDomainNV2A();
-			interfaces.Add(new MemoryDomainProxy(geforce3reg));
+			MemoryDomainVirtualMemory gva = new MemoryDomainVirtualMemory();
+			interfaces.Add(new MemoryDomainProxy(gva));
+			//MemoryDomainNV2A geforce3reg = new MemoryDomainNV2A();
+			//interfaces.Add(new MemoryDomainProxy(geforce3reg));
 			//MemoryDomainAPU apureg = new MemoryDomainAPU(); //for some reason, xemu's code for reading and writing to the apu
 															 //REQUIRES that the value be 32-bit. There's an assert function that
 															//IGNORES the fact I globally disabled all assertions and crashes
@@ -361,7 +414,7 @@ namespace XemuVanguardHook
 					{
 						var fileName = advancedMessage.objectValue as string;
 						//VanguardCore.LOAD_GAME_START(fileName);
-						
+						//LoadDVD(fileName);
 					}
 					break;
 				case RTCV.NetCore.Commands.Remote.CloseGame:
