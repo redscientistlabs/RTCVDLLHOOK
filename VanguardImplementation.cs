@@ -18,13 +18,16 @@ using System.IO;
 
 namespace XemuVanguardHook
 {
-	public class MemoryDomainCPUMemory : IMemoryDomain
+	public class MemoryDomainCPUMemory : IMemoryDomain, ICodeCavable
 	{
 		public string Name => "System Memory";
 		public bool BigEndian => false;
 		public long Size => VanguardImplementation.vanguard_getMemorySize();
 		public int WordSize => 4;
-		public override string ToString() => Name;
+
+        public ICodeCavesDomain CodeCaves { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public override string ToString() => Name;
 		public MemoryDomainCPUMemory()
 		{
 
@@ -43,7 +46,7 @@ namespace XemuVanguardHook
 			{
 				return 0;
 			}
-			uint buffer = 0;
+			byte buffer = 0;
 			return (byte)VanguardImplementation.GPA_READB(addr, buffer);
 		}
 		public byte[] PeekBytes(long address, int length)
@@ -54,7 +57,12 @@ namespace XemuVanguardHook
 				returnArray[i] = PeekByte(address + i);
 			return returnArray;
 		}
-	}
+
+        public byte[] GetMemory()
+        {
+			return PeekBytes(0, (int)Size);
+        }
+    }
 	public class MemoryDomainNV2A : IMemoryDomain
 	{
 		public string Name => "NV2A Registers";
@@ -82,7 +90,7 @@ namespace XemuVanguardHook
 				return 0;
 			}
 			addr += 0xFD000000;
-			uint buffer = 0;
+			byte buffer = 0;
 			return (byte)VanguardImplementation.GPA_READB(addr, buffer);
 		}
 		public byte[] PeekBytes(long address, int length)
@@ -121,7 +129,7 @@ namespace XemuVanguardHook
 				return 0;
 			}
 			addr += 0xFE800000;
-			uint buffer = 0;
+			byte buffer = 0;
 			return (byte)VanguardImplementation.GPA_READB(addr, buffer);
 		}
 		public byte[] PeekBytes(long address, int length)
@@ -137,9 +145,9 @@ namespace XemuVanguardHook
     {
 
         [DllImport("xemu.exe")]
-        public static extern uint gpa_readb(long addr, uint buf);
+        public static extern uint gpa_readb(long addr, byte buf);
 		[DllImport("xemu.exe")]
-		public static extern void gpa_writeb(long addr, uint buf);
+		public static extern void gpa_writeb(long addr, byte buf);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void vanguard_savevm_state(char* cmd);
         [DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
@@ -160,11 +168,11 @@ namespace XemuVanguardHook
 		public static unsafe extern void vanguard_setMainThreadCommand(char* command);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
 		public static unsafe extern void vanguard_setMainThreadCommandCharArg(char* arg);
-		public static uint GPA_READB(long addr, uint buf)
+		public static uint GPA_READB(long addr, byte buf)
         {
 			return gpa_readb(addr, buf);
 		}
-		public static void GPA_WRITEB(long addr, uint buf)
+		public static void GPA_WRITEB(long addr, byte buf)
 		{
 			gpa_writeb(addr, buf);
 		}

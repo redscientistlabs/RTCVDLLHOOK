@@ -156,17 +156,19 @@ namespace XemuVanguardHook
 		public static void Start()
 		{
 			xemu = Process.GetProcessesByName("xemu").First<Process>();
-			//ProcessThread mainthread = (ProcessThread)xemu.Threads.GetEnumerator().Current;
+			//SyncForm = new AnchorForm();
+			//         //Grab an object on the main thread to use for netcore invokes
+			//         Dispatcher.CurrentDispatcher.Invoke((MethodInvoker)delegate
+			//         {
+			//             SyncForm.Activate();
+
+			//         }, null);
+			//         //IntPtr Handle = SyncForm.Handle;
+			//SyncObjectSingleton.SyncObject = SyncForm;
 			SyncForm = new Form();
-			//Grab an object on the main thread to use for netcore invokes
-			Dispatcher.CurrentDispatcher.Invoke((MethodInvoker)delegate
-			{
-				SyncForm.Show();
-				SyncForm.Activate();
-				
-			}, null);
+			var handle = SyncForm.Handle;
 			SyncObjectSingleton.SyncObject = SyncForm;
-			
+
 			//SyncObjectSingleton.EmuInvokeDelegate = new SyncObjectSingleton.ActionDelegate(EmuThreadExecute);
 			SyncObjectSingleton.EmuThreadIsMainThread = true;
 			//SyncForm.Show();

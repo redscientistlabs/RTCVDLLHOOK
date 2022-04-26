@@ -16,10 +16,11 @@ using System.IO;
 
 namespace Project64Vanguard_Hook
 {
+	//it's called Project64Vanguard_Hook but it's really a hook to m64p and I'm too lazy to rename this
 	public class MemoryDomainCPUMemory : IMemoryDomain
 	{
 		public string Name => "RDRAM";
-		public bool BigEndian => false;
+		public bool BigEndian => true;
 		public long Size => 0x7FFFFF+1;
 		public int WordSize => 4;
 		public override string ToString() => Name;
@@ -55,42 +56,43 @@ namespace Project64Vanguard_Hook
 	}
 	public class VanguardImplementation
     {
-		[DllImport("Project64.exe")]
-		public static extern char ManagedWrapper_peekbyte(long addr);
-		[DllImport("Project64.exe")]
-		public static extern void ManagedWrapper_pokebyte(long addr, char val);
-		[DllImport("Project64.exe")]
-		public static extern void ManagedWrapper_savesavestate();
-		[DllImport("Project64.exe")]
-		public static extern void ManagedWrapper_loadsavestate();
-		[DllImport("Project64.exe")]
-		public static extern string ManagedWrapper_getstatepath();
+		[DllImport("mupen64plus.dll")]
+		public static extern byte DebugMemRead8(long addr);
+		[DllImport("mupen64plus.dll")]
+		public static extern void DebugMemWrite8(long addr, uint val);
+		[DllImport("mupen64plus.dll")]
+		public static extern void ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
+		[DllImport("mupen64plus.dll")]
+		public static extern void ManagedWrapper_loadsavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
+		[DllImport("mupen64plus.dll")]
+		public static extern void ManagedWrapper_pause();
+		[DllImport("mupen64plus.dll")]
+		public static extern void ManagedWrapper_resume();
 
 		public static uint RDRAM_READB(long addr, uint buf)
         {
-			return ManagedWrapper_peekbyte(addr);
+			return DebugMemRead8(addr);
 		}
-		public static void RDRAM_WRITEB(long addr, char buf)
+		public static void RDRAM_WRITEB(long addr, uint buf)
 		{
-			ManagedWrapper_pokebyte(addr, buf);
+			DebugMemWrite8(addr, buf);
 		}
-		public static void SaveVMState()
+		public static void SaveVMState(string filename)
         {
 			//vanguard_savevm_state(filename);
-			ManagedWrapper_savesavestate();
+			ManagedWrapper_savesavestate(filename);
 			Thread.Sleep(1000);
 			
 		}
 		public static void LoadVMState(string filename)
 		{
 			//vanguard_loadvm_state(filename);
-			ManagedWrapper_loadsavestate();
+			ManagedWrapper_loadsavestate(filename);
 			Thread.Sleep(1000);
 		}
 		public static string GetStateName()
         {
-			MessageBox.Show($"Save path reported is {ManagedWrapper_getstatepath()}");
-			return ManagedWrapper_getstatepath();
+			return "";
         }
 		public static string SaveSavestate(string Key, bool threadSave = false)
 		{
@@ -101,6 +103,7 @@ namespace Project64Vanguard_Hook
 			//VanguardImplementation.SaveVMState();
 			//FileInfo fi = new FileInfo(GetStateName());
 			//File.Copy(fi.FullName, path);
+			VanguardImplementation.SaveVMState(path);
 			return path;
 		}
 
@@ -111,7 +114,7 @@ namespace Project64Vanguard_Hook
 			//string ogpath = GetStateName();
 			//File.Delete(ogpath);
 			//File.Copy(path, ogpath);
-			//LoadVMState(path);
+			LoadVMState(path);
 			return true;
 		}
 		
@@ -249,6 +252,13 @@ namespace Project64Vanguard_Hook
 					e.setReturnValue(VanguardCore.RTE_API);
 					break;
 
+				case RTCV.NetCore.Commands.Remote.PreCorruptAction:
+					SyncObjectSingleton.EmuThreadExecute(ManagedWrapper_pause, true);
+					break;
+
+				case RTCV.NetCore.Commands.Remote.PostCorruptAction:
+					SyncObjectSingleton.EmuThreadExecute(ManagedWrapper_resume, true);
+					break;
 
 				case RTCV.NetCore.Commands.Remote.EventEmuStarted:
 					//if (RTC_StockpileManager.BackupedState == null)

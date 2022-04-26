@@ -82,7 +82,7 @@ namespace Project64Vanguard_Hook
         public static PartialSpec getDefaultPartial()
         {
 			var partial = new PartialSpec("VanguardSpec");
-			partial[VSPEC.NAME] = "Project64";
+			partial[VSPEC.NAME] = "M64P";
 			partial[VSPEC.SYSTEM] = "Nintendo 64";
 			partial[VSPEC.GAMENAME] = "IGNORE";
 			partial[VSPEC.SYSTEMPREFIX] = "Nintendo 64";
@@ -163,7 +163,6 @@ namespace Project64Vanguard_Hook
 			{
 				SyncForm.Show();
 				SyncForm.Activate();
-				
 			}, null);
 			SyncObjectSingleton.SyncObject = SyncForm;
 			
