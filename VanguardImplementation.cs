@@ -63,6 +63,82 @@ namespace XemuVanguardHook
 			return PeekBytes(0, (int)Size);
 		}
 	}
+    public class DummyCodeCavesDomain : ICodeCavesDomain //dummy until I implement code caves in this
+    {
+        public Dictionary<long, ICodeCave> Caves { get => null; set { } }
+        public long Size { get => 0; set { } }
+
+        public string Name => "DummyCodeCavesDomain";
+
+        public int WordSize => 0;
+
+        public bool BigEndian => false;
+
+        public (long, ulong) AllocateMemory(int size)
+        {
+            return (0, 0);
+        }
+
+        public byte PeekByte(long addr)
+        {
+			return 0;
+        }
+
+        public byte[] PeekBytes(long address, int length)
+        {
+			return new byte[] { 0 };
+        }
+
+        public void PokeByte(long addr, byte val)
+        {
+            
+        }
+    }
+    public class MemoryDomainFlashROM : IMemoryDomain
+	{
+		public string Name => "Flash ROM";
+		public bool BigEndian => false;
+		public long Size => 0xFFFFFF + 1;
+		public int WordSize => 4;
+
+		public ICodeCavesDomain CodeCaves { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+		public override string ToString() => Name;
+		public MemoryDomainFlashROM()
+		{
+
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.GPA_WRITEB(address + 0xFF000000, val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			byte buffer = 0;
+			return (byte)VanguardImplementation.GPA_READB(addr + 0xFF000000, buffer);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+
+		public byte[] GetMemory()
+		{
+			return PeekBytes(0, (int)Size);
+		}
+	}
 	public class MemoryDomainVirtualMemory : IMemoryDomain, ICodeCavable
 	{
 		public string Name => "Virtual Memory";
@@ -70,7 +146,7 @@ namespace XemuVanguardHook
 		public long Size => 0x100000000;
 		public int WordSize => 4;
 
-		public ICodeCavesDomain CodeCaves { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		public ICodeCavesDomain CodeCaves { get; set; }
 
 		public override string ToString() => Name;
 		public MemoryDomainVirtualMemory()
@@ -280,7 +356,7 @@ namespace XemuVanguardHook
 		{
 			string gamename = "IGNORE";
 			int i = 0;
-			MemoryDomainProxy xboxsdram = MemoryDomains.GetProxy("System Memory", 0);
+			MemoryDomainProxy xboxsdram = MemoryDomains.GetProxy("Virtual Memory", 0);
 			while (i < xboxsdram.Size)
 			{
 				if (xboxsdram.PeekByte(i) == 0x58)
@@ -365,6 +441,8 @@ namespace XemuVanguardHook
 			interfaces.Add(new MemoryDomainProxy(cpumem));
 			MemoryDomainVirtualMemory gva = new MemoryDomainVirtualMemory();
 			interfaces.Add(new MemoryDomainProxy(gva));
+			MemoryDomainFlashROM flashROM = new MemoryDomainFlashROM();
+			interfaces.Add(new MemoryDomainProxy(flashROM));
 			//MemoryDomainNV2A geforce3reg = new MemoryDomainNV2A();
 			//interfaces.Add(new MemoryDomainProxy(geforce3reg));
 			//MemoryDomainAPU apureg = new MemoryDomainAPU(); //for some reason, xemu's code for reading and writing to the apu
