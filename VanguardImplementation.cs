@@ -145,7 +145,7 @@ namespace XemuVanguardHook
     {
 
         [DllImport("xemu.exe")]
-        public static extern uint gpa_readb(long addr, byte buf);
+        public static extern byte gpa_readb(long addr, byte buf);
 		[DllImport("xemu.exe")]
 		public static extern void gpa_writeb(long addr, byte buf);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
@@ -168,7 +168,7 @@ namespace XemuVanguardHook
 		public static unsafe extern void vanguard_setMainThreadCommand(char* command);
 		[DllImport("xemu.exe", CallingConvention = CallingConvention.Cdecl)]
 		public static unsafe extern void vanguard_setMainThreadCommandCharArg(char* arg);
-		public static uint GPA_READB(long addr, byte buf)
+		public static byte GPA_READB(long addr, byte buf)
         {
 			return gpa_readb(addr, buf);
 		}
