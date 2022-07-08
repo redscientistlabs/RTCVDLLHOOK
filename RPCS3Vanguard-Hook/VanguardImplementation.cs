@@ -34,7 +34,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0x00010000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0x00010000, (byte)val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -71,7 +71,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0x40000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0x40000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -108,7 +108,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0xC0000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0xC0000000, (byte)val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -145,7 +145,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0xD0000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0xD0000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -182,7 +182,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0x20000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0x20000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -219,7 +219,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0xE0000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0xE0000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -256,7 +256,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0x30000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0x30000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -293,7 +293,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0xB0000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0xB0000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -330,7 +330,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address + 0x50000000, (char)val);
+			VanguardImplementation.VM_WRITEB(address + 0x50000000, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -367,7 +367,7 @@ namespace RPCS3Vanguard_Hook
 			{
 				return;
 			}
-			VanguardImplementation.VM_WRITEB(address, (char)val);
+			VanguardImplementation.VM_WRITEB(address, val);
 		}
 		public byte PeekByte(long addr)
 		{
@@ -392,7 +392,7 @@ namespace RPCS3Vanguard_Hook
 		[DllImport("RPCS3.exe")]
 		public static extern byte ManagedWrapper_peekbyte(long addr);
 		[DllImport("RPCS3.exe")]
-		public static extern void ManagedWrapper_pokebyte(long addr, char val);
+		public static extern void ManagedWrapper_pokebyte(long addr, byte val);
 		[DllImport("RPCS3.exe")]
 		public static extern void ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.LPStr)] string filename);
 		[DllImport("RPCS3.exe")]
@@ -412,11 +412,11 @@ namespace RPCS3Vanguard_Hook
 			}, true);
 		}
 
-		public static uint VM_READB(long addr, uint buf)
+		public static byte VM_READB(long addr, uint buf)
         {
 			return ManagedWrapper_peekbyte(addr);
 		}
-		public static void VM_WRITEB(long addr, char buf)
+		public static void VM_WRITEB(long addr, byte buf)
 		{
 			ManagedWrapper_pokebyte(addr, buf);
 		}
