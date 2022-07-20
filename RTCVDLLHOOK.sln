@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31025.194
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XemuVanguard-Hook", "XemuVanguard-Hook.csproj", "{1D1E5542-6D08-422A-90AA-A6A1F94C7B6A}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -38,6 +38,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FBNEO", "FBNEO", "{C8C110F8-B7EA-4249-8F8F-7DCCC9C91071}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FBNEOVanguard-Hook", "FBNEOVanguard-Hook\FBNEOVanguard-Hook.csproj", "{3D561270-DA4E-4A38-90D3-A5C40F462DC4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Retroarch", "Retroarch", "{434FB7A0-495B-4F27-8C89-B87FB6B37C91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetroarchVanguard-Hook", "RetroarchVanguard-Hook\RetroarchVanguard-Hook.csproj", "{7898A767-A421-4A4F-92C1-D87433D2876F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +85,10 @@ Global
 		{3D561270-DA4E-4A38-90D3-A5C40F462DC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D561270-DA4E-4A38-90D3-A5C40F462DC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D561270-DA4E-4A38-90D3-A5C40F462DC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7898A767-A421-4A4F-92C1-D87433D2876F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7898A767-A421-4A4F-92C1-D87433D2876F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7898A767-A421-4A4F-92C1-D87433D2876F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7898A767-A421-4A4F-92C1-D87433D2876F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +107,8 @@ Global
 		{797B9674-83FB-4F4E-B9EF-733DE20DE87B} = {DDD7348E-DC48-4D32-98B9-6B438DCC7140}
 		{C8C110F8-B7EA-4249-8F8F-7DCCC9C91071} = {1ADE7685-6FFC-4AAD-B218-9E9E5A3DE339}
 		{3D561270-DA4E-4A38-90D3-A5C40F462DC4} = {C8C110F8-B7EA-4249-8F8F-7DCCC9C91071}
+		{434FB7A0-495B-4F27-8C89-B87FB6B37C91} = {1ADE7685-6FFC-4AAD-B218-9E9E5A3DE339}
+		{7898A767-A421-4A4F-92C1-D87433D2876F} = {434FB7A0-495B-4F27-8C89-B87FB6B37C91}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F6818051-BEE2-4E9B-A542-37EB489BC743}
