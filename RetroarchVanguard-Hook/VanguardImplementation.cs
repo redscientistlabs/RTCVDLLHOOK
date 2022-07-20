@@ -177,11 +177,13 @@ namespace RetroarchVanguard_Hook
 		public static void SaveVMState(string path)
         {
 			VanguardWrapper_savestate(path);
+			Thread.Sleep(1000);
 			//File.Create(path); //create dummy file for now, savestate manager isn't working for now
 		}
 		public static void LoadVMState(string filename)
 		{
 			VanguardWrapper_loadstate(filename);
+			Thread.Sleep(1000);
 		}
 		public static string GetStateName()
         {
@@ -198,8 +200,6 @@ namespace RetroarchVanguard_Hook
 
 		public static bool LoadSavestate(string path, StashKeySavestateLocation stateLocation = StashKeySavestateLocation.DEFAULTVALUE)
 		{
-			StepActions.ClearStepBlastUnits();
-			RtcClock.ResetCount();
 			LoadVMState(path);
 			return true;
 		}
