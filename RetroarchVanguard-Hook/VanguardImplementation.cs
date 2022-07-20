@@ -41,9 +41,9 @@ namespace RetroarchVanguard_Hook
         {
             
         }
-    }
+	}
 
-    public class RAMemoryDomain : IMemoryDomain
+	public class RAMemoryDomain : IMemoryDomain
 	{
 		public uint Id;
 		public string Name { get; }
@@ -83,18 +83,67 @@ namespace RetroarchVanguard_Hook
 			return returnArray;
 		}
 	}
+
+	public class FallbackRAMemoryDomain : IMemoryDomain
+	{
+		public string Name { get; }
+		public bool BigEndian { get; }
+		public long Size { get; }
+		public int WordSize => 4;
+		public override string ToString() => Name;
+		public FallbackRAMemoryDomain()
+		{
+			Name = VanguardImplementation.VanguardWrapper_getmemname_alt(2); // SYSTEM_RAM
+			BigEndian = false; // WILL be wrong for some cores
+			Size = (long)VanguardImplementation.VanguardWrapper_getmemsize_alt(2);
+		}
+		public void PokeByte(long address, byte val)
+		{
+			if (address > Size)
+			{
+				return;
+			}
+			VanguardImplementation.VanguardWrapper_pokebyte_alt(2, address, val);
+		}
+		public byte PeekByte(long addr)
+		{
+			if (addr > Size)
+			{
+				return 0;
+			}
+			return VanguardImplementation.VanguardWrapper_peekbyte_alt(2, addr);
+		}
+		public byte[] PeekBytes(long address, int length)
+		{
+
+			var returnArray = new byte[length];
+			for (var i = 0; i < length; i++)
+				returnArray[i] = PeekByte(address + i);
+			return returnArray;
+		}
+	}
 	public class VanguardImplementation
-    {
+	{
 		[DllImport("RetroArch-msvc2019.exe")]
 		public static extern byte VanguardWrapper_peekbyte(uint id, long addr);
 		[DllImport("RetroArch-msvc2019.exe")]
 		public static extern void VanguardWrapper_pokebyte(uint id, long addr, byte val);
 		[DllImport("RetroArch-msvc2019.exe")]
+		public static extern byte VanguardWrapper_peekbyte_alt(uint type, long addr);
+		[DllImport("RetroArch-msvc2019.exe")]
+		public static extern void VanguardWrapper_pokebyte_alt(uint type, long addr, byte val);
+		[DllImport("RetroArch-msvc2019.exe")]
 		public static extern ulong VanguardWrapper_getmemsize(uint id);
+		[DllImport("RetroArch-msvc2019.exe")]
+		public static extern ulong VanguardWrapper_getmemsize_alt(uint type);
 
 		[DllImport("RetroArch-msvc2019.exe")]
 		[return: MarshalAs(UnmanagedType.LPStr)]
 		public static extern string VanguardWrapper_getmemname(uint id);
+
+		[DllImport("RetroArch-msvc2019.exe")]
+		[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern string VanguardWrapper_getmemname_alt(uint type);
 
 		[DllImport("RetroArch-msvc2019.exe")]
 		public static extern uint VanguardWrapper_getmemdesccount();
@@ -204,7 +253,7 @@ namespace RetroarchVanguard_Hook
         }
 		public static void RefreshDomains()
         {
-			if (VanguardImplementation.connector.netcoreStatus != RTCV.NetCore.Enums.NetworkStatus.CONNECTED || VanguardWrapper_getmemdesccount() == 0)
+			if (VanguardImplementation.connector.netcoreStatus != RTCV.NetCore.Enums.NetworkStatus.CONNECTED || (VanguardWrapper_getmemdesccount() == 0 && VanguardImplementation.VanguardWrapper_getmemsize_alt(2) == 0))
                 return;
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			gameDone[VSPEC.MEMORYDOMAINS_INTERFACES] = GetInterfaces();
@@ -219,6 +268,10 @@ namespace RetroarchVanguard_Hook
 			for (uint i = 0; i < VanguardWrapper_getmemdesccount(); i++)
             {
 				interfaces.Add(new MemoryDomainProxy(new RAMemoryDomain(i)));
+            }
+			if (VanguardWrapper_getmemdesccount() == 0)
+            {
+				interfaces.Add(new MemoryDomainProxy(new FallbackRAMemoryDomain()));
             }
 			return interfaces.Count > 0 ? interfaces.ToArray() : new MemoryDomainProxy[] {new MemoryDomainProxy(new DummyMemoryDomain()) };
 			
