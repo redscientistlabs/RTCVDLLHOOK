@@ -265,9 +265,9 @@ namespace RetroarchVanguard_Hook
             switch (core)
 			{
 				// todo: set big endian for each (ugh) core that is big endian and is known to use get_memory_data() instead of memory descriptors
-				case "dolphin_libretro.dll":
+				case "\\dolphin_libretro.dll":
 					return true;
-				case "parallel_n64_libretro.dll":
+				case "\\parallel_n64_libretro.dll":
 					return true;
 				default: break;
             }
