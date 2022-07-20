@@ -153,11 +153,11 @@ namespace RetroarchVanguard_Hook
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			VanguardImplementation.RefreshDomains();
 			gameDone[VSPEC.GAMENAME] = VanguardImplementation.GetGameName();
-			gameDone[VSPEC.SYSTEM] = VanguardImplementation.VanguardWrapper_getcorename();
-			gameDone[VSPEC.SYSTEMPREFIX] = VanguardImplementation.VanguardWrapper_getcorename();
-			gameDone[VSPEC.SYSTEMCORE] = VanguardImplementation.VanguardWrapper_getcorepath().Substring(VanguardImplementation.VanguardWrapper_getcorepath().LastIndexOf("\\"));
+			gameDone[VSPEC.SYSTEM] = VanguardImplementation.GetCoreName();
+			gameDone[VSPEC.SYSTEMPREFIX] = VanguardImplementation.GetCoreName();
+			gameDone[VSPEC.SYSTEMCORE] = VanguardImplementation.GetCorePath().Substring(VanguardImplementation.GetCorePath().LastIndexOf("\\"));
 			gameDone[VSPEC.OPENROMFILENAME] = VanguardImplementation.GetROM();
-			gameDone[VSPEC.SYNCSETTINGS] = VanguardImplementation.VanguardWrapper_getcorepath();
+			gameDone[VSPEC.SYNCSETTINGS] = VanguardImplementation.GetCorePath();
 			AllSpec.VanguardSpec.Update(gameDone);
 			RtcCore.InvokeLoadGameDone();
 		}

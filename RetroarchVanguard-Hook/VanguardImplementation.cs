@@ -49,14 +49,15 @@ namespace RetroarchVanguard_Hook
 		public string Name { get; }
 		public bool BigEndian { get; }
 		public long Size { get; }
-		public int WordSize => 4;
+		public int WordSize { get; }
 		public override string ToString() => Name;
 		public RAMemoryDomain(uint id)
 		{
 			Id = id;
-			Name = VanguardImplementation.VanguardWrapper_getmemname(id);
+			Name = VanguardImplementation.GetMemoryRegionName(id, false);
 			BigEndian = VanguardImplementation.VanguardWrapper_ismemregionbigendian(id);
 			Size = (long)VanguardImplementation.VanguardWrapper_getmemsize(id);
+			WordSize = VanguardImplementation.GetWordSize();
 		}
 		public void PokeByte(long address, byte val)
 		{
@@ -89,13 +90,14 @@ namespace RetroarchVanguard_Hook
 		public string Name { get; }
 		public bool BigEndian { get; }
 		public long Size { get; }
-		public int WordSize => 4;
+		public int WordSize { get; }
 		public override string ToString() => Name;
 		public FallbackRAMemoryDomain()
 		{
-			Name = VanguardImplementation.VanguardWrapper_getmemname_alt(2); // SYSTEM_RAM
-			BigEndian = false; // WILL be wrong for some cores
+			Name = VanguardImplementation.GetMemoryRegionName(0, true); // SYSTEM_RAM
+			BigEndian = VanguardImplementation.IsCoreBigEndian(); // WILL be wrong for some cores that aren't taken into account by this function
 			Size = (long)VanguardImplementation.VanguardWrapper_getmemsize_alt(2);
+			WordSize = VanguardImplementation.GetWordSize();
 		}
 		public void PokeByte(long address, byte val)
 		{
@@ -124,52 +126,52 @@ namespace RetroarchVanguard_Hook
 	}
 	public class VanguardImplementation
 	{
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern byte VanguardWrapper_peekbyte(uint id, long addr);
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern void VanguardWrapper_pokebyte(uint id, long addr, byte val);
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern byte VanguardWrapper_peekbyte_alt(uint type, long addr);
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern void VanguardWrapper_pokebyte_alt(uint type, long addr, byte val);
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern ulong VanguardWrapper_getmemsize(uint id);
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern ulong VanguardWrapper_getmemsize_alt(uint type);
 
-		[DllImport("RetroArch-msvc2019.exe")]
-		[return: MarshalAs(UnmanagedType.LPStr)]
-		public static extern string VanguardWrapper_getmemname(uint id);
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+		//[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern IntPtr VanguardWrapper_getmemname(uint id);
 
-		[DllImport("RetroArch-msvc2019.exe")]
-		[return: MarshalAs(UnmanagedType.LPStr)]
-		public static extern string VanguardWrapper_getmemname_alt(uint type);
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+		//[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern IntPtr VanguardWrapper_getmemname_alt(uint type);
 
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern uint VanguardWrapper_getmemdesccount();
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern void VanguardWrapper_savestate([MarshalAs(UnmanagedType.LPStr)] string path);
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern void VanguardWrapper_loadstate([MarshalAs(UnmanagedType.LPStr)] string path);
 
-		[DllImport("RetroArch-msvc2019.exe")]
-		[return: MarshalAs(UnmanagedType.LPStr)]
-		public static extern string VanguardWrapper_getrompath();
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+		//[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern IntPtr VanguardWrapper_getrompath();
 
-		[DllImport("RetroArch-msvc2019.exe")]
-		[return: MarshalAs(UnmanagedType.LPStr)]
-		public static extern string VanguardWrapper_getcorepath();
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+		//[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern IntPtr VanguardWrapper_getcorepath();
 
-		[DllImport("RetroArch-msvc2019.exe")]
-		[return: MarshalAs(UnmanagedType.LPStr)]
-		public static extern string VanguardWrapper_getcorename();
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+		//[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern IntPtr VanguardWrapper_getcorename();
 
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern void VanguardWrapper_loadcontent([MarshalAs(UnmanagedType.LPStr)] string core, [MarshalAs(UnmanagedType.LPStr)] string rompath);
-		[DllImport("RetroArch-msvc2019.exe")]
-		[return: MarshalAs(UnmanagedType.LPStr)]
-		public static extern string VanguardWrapper_getcontentname();
-		[DllImport("RetroArch-msvc2019.exe")]
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+		//[return: MarshalAs(UnmanagedType.LPStr)]
+		public static extern IntPtr VanguardWrapper_getcontentname();
+		[DllImport("RetroArch-msvc2019.exe", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
 		public static extern bool VanguardWrapper_ismemregionbigendian(uint id);
 
 		public static void SaveVMState(string path)
@@ -204,9 +206,9 @@ namespace RetroarchVanguard_Hook
 		
 		public static string GetGameName()
 		{
-			string gamename = VanguardWrapper_getcontentname();
+			var ret = VanguardWrapper_getcontentname();
 			
-			return gamename;
+			return Marshal.PtrToStringAnsi(ret).ToString().Trim();
 		}
 		public static string GetShortGameName()
         {
@@ -219,9 +221,73 @@ namespace RetroarchVanguard_Hook
 			VanguardWrapper_loadcontent(core, rompath);
 		}
 		public static string GetROM()
+		{
+			var ret = VanguardWrapper_getrompath();
+
+			return Marshal.PtrToStringAnsi(ret).ToString().Trim();
+		}
+		public static string GetCoreName()
+		{
+			var ret = VanguardWrapper_getcorename();
+
+			return Marshal.PtrToStringAnsi(ret).ToString().Trim();
+		}
+		public static string GetCorePath()
+		{
+			var ret = VanguardWrapper_getcorepath();
+
+			return Marshal.PtrToStringAnsi(ret).ToString().Trim();
+		}
+		public static string GetMemoryRegionName(uint id, bool fallback)
+		{
+			if (!fallback)
+            {
+				var ret = VanguardWrapper_getmemname(id);
+
+				return Marshal.PtrToStringAnsi(ret).ToString().Trim();
+			}
+			else
+            {
+				var ret = VanguardWrapper_getmemname_alt(2 /* SYSTEM_RAM */);
+
+				return Marshal.PtrToStringAnsi(ret).ToString().Trim();
+			}
+		}
+		// used for cores that don't use memory descriptors
+		public static bool IsCoreBigEndian()
         {
-			return VanguardWrapper_getrompath();
+			var core = VanguardCore.SystemCore;
+			if (core == null)
+            {
+				return false;
+            }
+			// set big endian if core is for a known big endian system
+            switch (core)
+			{
+				// todo: set big endian for each (ugh) core that is big endian and is known to use get_memory_data() instead of memory descriptors
+				case "dolphin_libretro.dll":
+					return true;
+				case "parallel_n64_libretro.dll":
+					return true;
+				default: break;
+            }
+            return false;
         }
+		public static int GetWordSize()
+		{
+			var core = VanguardCore.SystemCore;
+			if (core == null)
+            {
+				return 4; // fallback
+            }
+            // set word size different from 4 if core is for a known system with a word size different from that
+            switch (core)
+            {
+				// todo: set word size for each (ugh) core that is known to use get_memory_data() instead of memory descriptors
+				default: break;
+            }
+            return 4; // fallback
+		}
 		//[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
 		//delegate
 		public static RTCV.Vanguard.VanguardConnector connector = null;
