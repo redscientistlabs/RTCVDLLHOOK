@@ -101,43 +101,43 @@ namespace DolphinVanguard_Hook
 		public static bool enableRTC = true;
 
 		[DllImport("Dolphin.exe")]
-		public static extern byte ManagedWrapper_peekbyte(long addr);
+		public static extern byte Vanguard_peekbyte(long addr);
 		[DllImport("Dolphin.exe")]
-		public static extern void ManagedWrapper_pokebyte(long addr, byte val);
+		public static extern void Vanguard_pokebyte(long addr, byte val);
 		[DllImport("Dolphin.exe")]
-		public static extern void ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.BStr)] string filename, bool wait);
+		public static extern void Vanguard_savesavestate([MarshalAs(UnmanagedType.BStr)] string filename, bool wait);
 		[DllImport("Dolphin.exe")]
-		public static extern void ManagedWrapper_loadsavestate([MarshalAs(UnmanagedType.BStr)] string filename);
+		public static extern void Vanguard_loadsavestate([MarshalAs(UnmanagedType.BStr)] string filename);
 		[DllImport("Dolphin.exe")]
-		public static extern void ManagedWrapper_pause();
+		public static extern void Vanguard_pause();
 		[DllImport("Dolphin.exe")]
-		public static extern void ManagedWrapper_resume();
+		public static extern void Vanguard_resume();
 
 		public static void ReloadState()
         {
 			var path = Path.Combine(RtcCore.workingDir, "SESSION", "Dolphintmp.savestat");
 			SyncObjectSingleton.EmuThreadExecute(() =>
 			{
-				ManagedWrapper_savesavestate(path, false);
-				ManagedWrapper_loadsavestate(path);
+				Vanguard_savesavestate(path, false);
+				Vanguard_loadsavestate(path);
 			}, true);
 		}
 
 		public static byte VM_READB(long addr, uint buf)
         {
-			return ManagedWrapper_peekbyte(addr);
+			return Vanguard_peekbyte(addr);
 		}
 		public static void VM_WRITEB(long addr, byte buf)
 		{
-			ManagedWrapper_pokebyte(addr, buf);
+			Vanguard_pokebyte(addr, buf);
 		}
 		public static void SaveVMState(string path)
         {
-            ManagedWrapper_savesavestate(path, false);
+            Vanguard_savesavestate(path, false);
         }
 		public static void LoadVMState(string filename)
 		{
-			ManagedWrapper_loadsavestate(filename);
+			Vanguard_loadsavestate(filename);
 		}
 		public static string GetStateName()
         {
@@ -285,7 +285,7 @@ namespace DolphinVanguard_Hook
 					}
 					break;
 				case RTCV.NetCore.Commands.Remote.PreCorruptAction:
-					SyncObjectSingleton.EmuThreadExecute(ManagedWrapper_pause, true);
+					SyncObjectSingleton.EmuThreadExecute(Vanguard_pause, true);
 					break;
 
 				case RTCV.NetCore.Commands.Remote.PostCorruptAction:
@@ -293,9 +293,9 @@ namespace DolphinVanguard_Hook
 						//var path = Path.Combine(RtcCore.workingDir, "Dolphintmp.savestat");
 						SyncObjectSingleton.EmuThreadExecute(() =>
 						{
-							ManagedWrapper_resume();
-							//ManagedWrapper_savesavestate(path);
-							//ManagedWrapper_loadsavestate(path);
+							Vanguard_resume();
+							//Vanguard_savesavestate(path);
+							//Vanguard_loadsavestate(path);
 						}, true);
 					}
 					break;
