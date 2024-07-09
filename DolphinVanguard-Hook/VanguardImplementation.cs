@@ -15,6 +15,9 @@ using RTCV.NetCore.Commands;
 using System.IO;
 using System.IO.Compression;
 using System.Windows;
+using System.Runtime.InteropServices;
+using RTCV.Common.CustomExtensions;
+using RTCV.CorruptCore.Extensions;
 
 namespace DolphinVanguard_Hook
 {
@@ -102,9 +105,9 @@ namespace DolphinVanguard_Hook
 		[DllImport("Dolphin.exe")]
 		public static extern void ManagedWrapper_pokebyte(long addr, byte val);
 		[DllImport("Dolphin.exe")]
-		public static extern bool ManagedWrapper_savesavestate(string filename, bool wait);
+		public static extern void ManagedWrapper_savesavestate([MarshalAs(UnmanagedType.BStr)] string filename, bool wait);
 		[DllImport("Dolphin.exe")]
-		public static extern bool ManagedWrapper_loadsavestate(string filename);
+		public static extern void ManagedWrapper_loadsavestate([MarshalAs(UnmanagedType.BStr)] string filename);
 		[DllImport("Dolphin.exe")]
 		public static extern void ManagedWrapper_pause();
 		[DllImport("Dolphin.exe")]
@@ -130,8 +133,8 @@ namespace DolphinVanguard_Hook
 		}
 		public static void SaveVMState(string path)
         {
-			ManagedWrapper_savesavestate(path, false);
-		}
+            ManagedWrapper_savesavestate(path, false);
+        }
 		public static void LoadVMState(string filename)
 		{
 			ManagedWrapper_loadsavestate(filename);
@@ -142,9 +145,16 @@ namespace DolphinVanguard_Hook
         }
 		public static string SaveSavestate(string Key, bool threadSave = false)
 		{
-			string quickSlotName = Key + ".timejump";
+            string quickSlotName = Key + ".timejump";
 			string prefix = VanguardCore.GameName;
 			string path = Path.Combine(RtcCore.workingDir, "SESSION", prefix + "." + quickSlotName + ".State");
+
+			//Todo: readd MakeSafeFilename
+
+			FileInfo file = new FileInfo(path);
+			if (file.Directory != null && file.Directory.Exists == false)
+				file.Directory.Create();
+			
 			VanguardImplementation.SaveVMState(path);
 			return path;
 		}
@@ -255,7 +265,7 @@ namespace DolphinVanguard_Hook
 					break;
 				case RTCV.NetCore.Commands.Basic.SaveSavestate:
 					{
-						SyncObjectSingleton.EmuThreadExecute(() => { e.setReturnValue(SaveSavestate(advancedMessage.objectValue as string)); }, true);
+                        SyncObjectSingleton.EmuThreadExecute(() => { e.setReturnValue(SaveSavestate(advancedMessage.objectValue as string)); }, true);
 						break;
 					}
 				case RTCV.NetCore.Commands.Basic.LoadSavestate:

@@ -1,9 +1,11 @@
 ﻿using RTCV.Common;
 using RTCV.CorruptCore;
+using RTCV.NetCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,14 +34,14 @@ namespace DolphinVanguard_Hook
             VanguardCore.GAME_TO_LOAD = rompath;
         }
         [DllExport("LOADGAMESTART")]
-        public static void LOADGAMESTART(string rompath)
+        public static void LOADGAMESTART([MarshalAs(UnmanagedType.BStr)] string rompath)
         {
             VanguardCore.LOAD_GAME_START(rompath);
         }
         [DllExport("LOADGAMEDONE")]
-        public static void LOADGAMEDONE()
+        public static void LOADGAMEDONE([MarshalAs(UnmanagedType.BStr)] string gamename)
         {
-            VanguardCore.LOAD_GAME_DONE();
+            VanguardCore.LOAD_GAME_DONE(gamename);
         }
         [DllExport("GAMECLOSED")]
         public static void GAMECLOSED()

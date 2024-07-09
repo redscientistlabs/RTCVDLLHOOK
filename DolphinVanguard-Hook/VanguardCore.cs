@@ -23,7 +23,6 @@ namespace DolphinVanguard_Hook
 {
     class VanguardCore
 	{
-		
 		public static string[] args;
         public static System.Timers.Timer focusTimer;
         public static bool FirstConnect = true;
@@ -82,7 +81,7 @@ namespace DolphinVanguard_Hook
 		
         public static PartialSpec getDefaultPartial()
         {
-			var partial = new PartialSpec("VanguardSpec");
+			PartialSpec partial = new PartialSpec("VanguardSpec");
 			partial[VSPEC.NAME] = "Dolphin";
 			partial[VSPEC.SYSTEM] = String.Empty;
 			partial[VSPEC.GAMENAME] = String.Empty;
@@ -150,15 +149,20 @@ namespace DolphinVanguard_Hook
 				rompath = VanguardCore.GAME_TO_LOAD;
 				GAME_TO_LOAD = "";
 			}
-
-			VanguardImplementation.LoadROM(rompath);
-			LOAD_GAME_DONE();
+			AllSpec.VanguardSpec.Update(VSPEC.OPENROMFILENAME, rompath, true, true);
         }
-		public static void LOAD_GAME_DONE()
+		public static void LOAD_GAME_DONE(string gamename)
 		{
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			VanguardImplementation.RefreshDomains();
-			gameDone[VSPEC.GAMENAME] = VanguardImplementation.GetGameName();
+			gameDone[VSPEC.SYSTEM] = "Dolphin";
+			gameDone[VSPEC.SYSTEMPREFIX] = "Dolphin";
+			gameDone[VSPEC.SYSTEMCORE] = "Wii"; //hardcoded for now until I add system core checks
+			gameDone[VSPEC.SYNCSETTINGS] = "";
+			gameDone[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = gameDone[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS]; //need to figure out equivalent to `gcnew array<String ^>{}`
+			gameDone[VSPEC.CORE_DISKBASED] = true;
+			gameDone[VSPEC.GAMENAME] = gamename;
+			//Todo: add sync settings
 			AllSpec.VanguardSpec.Update(gameDone);
 			RtcCore.InvokeLoadGameDone();
 		}
