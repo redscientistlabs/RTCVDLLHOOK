@@ -119,37 +119,33 @@ namespace DolphinVanguard_Hook
 		public static bool enableRTC = true;
 
 		//load the emulator exe and creates a pointer to it
-		public static IntPtr pDll = LoadEmuPointer();
+		public static IntPtr pEXE = LoadEmuPointer();
 
 		//
 		//Import all supported functions from the emulator
 		//
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate byte Vpeekbyte(long addr);
-        public static Vpeekbyte Vanguard_peekbyte = GetModule<Vpeekbyte>("Vanguard_peekbyte");
+        public static Vpeekbyte Vanguard_peekbyte = GetMethod<Vpeekbyte>("Vanguard_peekbyte");
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void Vpokebyte(long addr, byte buf);
-        public static Vpokebyte Vanguard_pokebyte = GetModule<Vpokebyte>("Vanguard_pokebyte");
+        public static Vpokebyte Vanguard_pokebyte = GetMethod<Vpokebyte>("Vanguard_pokebyte");
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate void Vsavesavestate([MarshalAs(UnmanagedType.BStr)] string filename, bool wait);
-		public static Vsavesavestate Vanguard_savesavestate = GetModule<Vsavesavestate>("Vanguard_savesavestate");
+		public static Vsavesavestate Vanguard_savesavestate = GetMethod<Vsavesavestate>("Vanguard_savesavestate");
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void Vloadsavestate([MarshalAs(UnmanagedType.BStr)] string filename);
-		public static Vloadsavestate Vanguard_loadsavestate = GetModule<Vloadsavestate>("Vanguard_loadsavestate");
+		public static Vloadsavestate Vanguard_loadsavestate = GetMethod<Vloadsavestate>("Vanguard_loadsavestate");
 
 		//These two aren't programmed in the emulator right now, I'll have to figure out how to decide which methods are imported
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Action Vpause();
-		//public static Vpause Vanguard_pause = GetModule<Vpause>("Vanguard_pause");
-		public static Vpause Vanguard_pause;
+        //public static Vpause Vanguard_pause = GetMethod<Vpause>("Vanguard_pause");
+        public static Vpause Vanguard_pause;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void Vresume();
-		//public static Vresume Vanguard_resume = GetModule<Vresume>("Vanguard_resume");
-		public static Vresume Vanguard_resume;
+        //public static Vresume Vanguard_resume = GetMethod<Vresume>("Vanguard_resume");
+        public static Vresume Vanguard_resume;
 
 		public static IntPtr LoadEmuPointer()
 		{
@@ -158,9 +154,9 @@ namespace DolphinVanguard_Hook
 			return pDll;
         }
 
-		public static T GetModule<T>(string MethodName)
+		public static T GetMethod<T>(string MethodName)
 		{
-			IntPtr procAddr = NativeMethods.GetProcAddress(pDll, MethodName);
+			IntPtr procAddr = NativeMethods.GetProcAddress(pEXE, MethodName);
 			T Method = Marshal.GetDelegateForFunctionPointer<T>(procAddr);
             return Method;
 		}
