@@ -149,8 +149,7 @@ namespace DolphinVanguard_Hook
 
 		public static IntPtr LoadEmuPointer()
 		{
-            VanguardSpecConfig config = JsonConvert.DeserializeObject<VanguardSpecConfig>(File.ReadAllText("VanguardSpec.json"));
-            IntPtr pDll = NativeMethods.LoadLibrary(config.EmuEXE);
+            IntPtr pDll = NativeMethods.LoadLibrary(VSpecConfig.config.EmuEXE);
 			return pDll;
         }
 
