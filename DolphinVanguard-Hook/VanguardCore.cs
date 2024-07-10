@@ -17,7 +17,7 @@ using Timer = System.Threading.Timer;
 using System.Linq;
 using System.Windows.Threading;
 using RTCV.Common;
-//using System.Windows.Threading;
+using Newtonsoft.Json;
 
 namespace DolphinVanguard_Hook
 {
@@ -78,31 +78,50 @@ namespace DolphinVanguard_Hook
 		public static string emuDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 		public static string logPath = Path.Combine(emuDir, "EMU_LOG.txt");
 		public static string RTCVHookOGLVersion = "0.0.1";
+
+		public class VanguardSpecConfig
+        {
+			public string EmuEXE { get; set; }
+            public string NAME {  get; set; }
+			public string OVERRIDE_DEFAULTMAXINTENSITY { get; set; }
+			public bool SUPPORTS_RENDERING { get; set; }
+			public bool SUPPORTS_CONFIG_MANAGEMENT { get; set; }
+			public bool SUPPORTS_CONFIG_HANDOFF { get; set; }
+			public bool SUPPORTS_KILLSWITCH { get; set; }
+			public bool SUPPORTS_REALTIME { get; set; }
+			public bool SUPPORTS_SAVESTATES { get; set; }
+			public bool SUPPORTS_REFERENCES { get; set; }
+			public bool SUPPORTS_MIXED_STOCKPILE { get; set; }
+		}
 		
         public static PartialSpec getDefaultPartial()
         {
-			PartialSpec partial = new PartialSpec("VanguardSpec");
-			partial[VSPEC.NAME] = "Dolphin";
-			partial[VSPEC.SYSTEM] = String.Empty;
+			//read config file and store the values
+            VanguardSpecConfig config = JsonConvert.DeserializeObject<VanguardSpecConfig>(File.ReadAllText("VanguardSpec.json"));
+            PartialSpec partial = new PartialSpec("VanguardSpec");
+            partial[VSPEC.NAME] = config.NAME;
+            partial[VSPEC.SYSTEM] = String.Empty;
 			partial[VSPEC.GAMENAME] = String.Empty;
 			partial[VSPEC.SYSTEMPREFIX] = String.Empty;
 			partial[VSPEC.OPENROMFILENAME] = String.Empty;
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
-			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = 500000;
-			partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = new string[] { };
+            partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = config.OVERRIDE_DEFAULTMAXINTENSITY;
+            partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = new string[] { };
 			partial[VSPEC.MEMORYDOMAINS_INTERFACES] = new MemoryDomainProxy[] { };
 			partial[VSPEC.CORE_LASTLOADERROM] = -1;
-			partial[VSPEC.SUPPORTS_RENDERING] = false;
-			partial[VSPEC.SUPPORTS_CONFIG_MANAGEMENT] = true;
-			partial[VSPEC.SUPPORTS_CONFIG_HANDOFF] = true;
-			partial[VSPEC.SUPPORTS_KILLSWITCH] = true;
-			partial[VSPEC.SUPPORTS_REALTIME] = true;
-			partial[VSPEC.SUPPORTS_SAVESTATES] = true;
-			partial[VSPEC.SUPPORTS_REFERENCES] = true;
-			partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = true;
-			partial[VSPEC.CONFIG_PATHS] = new[] { "" };
+            partial[VSPEC.SUPPORTS_RENDERING] = config.SUPPORTS_RENDERING;
+            partial[VSPEC.SUPPORTS_CONFIG_MANAGEMENT] = config.SUPPORTS_CONFIG_MANAGEMENT;
+            partial[VSPEC.SUPPORTS_CONFIG_HANDOFF] = config.SUPPORTS_CONFIG_HANDOFF;
+            partial[VSPEC.SUPPORTS_KILLSWITCH] = config.SUPPORTS_KILLSWITCH;
+            partial[VSPEC.SUPPORTS_REALTIME] = config.SUPPORTS_REALTIME;
+            partial[VSPEC.SUPPORTS_SAVESTATES] = config.SUPPORTS_SAVESTATES;
+            partial[VSPEC.SUPPORTS_REFERENCES] = config.SUPPORTS_REFERENCES;
+            partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = config.SUPPORTS_MIXED_STOCKPILE;
+            partial[VSPEC.CONFIG_PATHS] = new[] { "" };
 			partial[VSPEC.EMUDIR] = emuDir;
-			return partial;
+
+            return partial;
+			
         }
 		internal static void CreateVmdText(string domain, string text)
         {
@@ -113,7 +132,6 @@ namespace DolphinVanguard_Hook
 			PartialSpec emuSpecTemplate = new PartialSpec("VanguardSpec");
 			emuSpecTemplate.Insert(VanguardCore.getDefaultPartial());
 			AllSpec.VanguardSpec = new FullSpec(emuSpecTemplate, !RtcCore.Attached);
-
 			if (VanguardCore.attached)
 				VanguardConnector.PushVanguardSpecRef(AllSpec.VanguardSpec);
 			LocalNetCoreRouter.Route(Endpoints.CorruptCore, Remote.PushVanguardSpec, emuSpecTemplate, true);
@@ -181,7 +199,7 @@ namespace DolphinVanguard_Hook
 		}
         public static bool RTC_OSD_ENABLED()
         {
-			if (VanguardImplementation.enableRTC)
+            if (VanguardImplementation.enableRTC)
 			{
 				return true;
 			}
