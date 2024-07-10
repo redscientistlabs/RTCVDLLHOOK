@@ -15,9 +15,12 @@ using RTCV.NetCore.Commands;
 using System.IO;
 using System.IO.Compression;
 using System.Windows;
-using System.Runtime.InteropServices;
 using RTCV.Common.CustomExtensions;
 using RTCV.CorruptCore.Extensions;
+using System.Reflection;
+using Newtonsoft.Json;
+using static DolphinVanguard_Hook.VanguardCore;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace DolphinVanguard_Hook
 {
@@ -96,24 +99,73 @@ namespace DolphinVanguard_Hook
 		}
 	}
 
+	//Import Windows functions required for importing emulator functions
+	public static class NativeMethods
+	{
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr LoadLibrary(string dllToLoad);
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, string procedureName);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool FreeLibrary(IntPtr hModule);
+
+    }
+
 	public class VanguardImplementation
     {
+
 		public static bool enableRTC = true;
 
-		[DllImport("Dolphin.exe")]
-		public static extern byte Vanguard_peekbyte(long addr);
-		[DllImport("Dolphin.exe")]
-		public static extern void Vanguard_pokebyte(long addr, byte val);
-		[DllImport("Dolphin.exe")]
-		public static extern void Vanguard_savesavestate([MarshalAs(UnmanagedType.BStr)] string filename, bool wait);
-		[DllImport("Dolphin.exe")]
-		public static extern void Vanguard_loadsavestate([MarshalAs(UnmanagedType.BStr)] string filename);
-		[DllImport("Dolphin.exe")]
-		public static extern void Vanguard_pause();
-		[DllImport("Dolphin.exe")]
-		public static extern void Vanguard_resume();
+		//load the emulator exe and creates a pointer to it
+		public static IntPtr pDll = LoadEmuPointer();
 
-		public static void ReloadState()
+		//
+		//Import all supported functions from the emulator
+		//
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate byte Vpeekbyte(long addr);
+        public static Vpeekbyte Vanguard_peekbyte = GetModule<Vpeekbyte>("Vanguard_peekbyte");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void Vpokebyte(long addr, byte buf);
+        public static Vpokebyte Vanguard_pokebyte = GetModule<Vpokebyte>("Vanguard_pokebyte");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void Vsavesavestate([MarshalAs(UnmanagedType.BStr)] string filename, bool wait);
+		public static Vsavesavestate Vanguard_savesavestate = GetModule<Vsavesavestate>("Vanguard_savesavestate");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void Vloadsavestate([MarshalAs(UnmanagedType.BStr)] string filename);
+		public static Vloadsavestate Vanguard_loadsavestate = GetModule<Vloadsavestate>("Vanguard_loadsavestate");
+
+		//These two aren't programmed in the emulator right now, I'll have to figure out how to decide which methods are imported
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate Action Vpause();
+		//public static Vpause Vanguard_pause = GetModule<Vpause>("Vanguard_pause");
+		public static Vpause Vanguard_pause;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void Vresume();
+		//public static Vresume Vanguard_resume = GetModule<Vresume>("Vanguard_resume");
+		public static Vresume Vanguard_resume;
+
+		public static IntPtr LoadEmuPointer()
+		{
+            VanguardSpecConfig config = JsonConvert.DeserializeObject<VanguardSpecConfig>(File.ReadAllText("VanguardSpec.json"));
+            IntPtr pDll = NativeMethods.LoadLibrary(config.EmuEXE);
+			return pDll;
+        }
+
+		public static T GetModule<T>(string MethodName)
+		{
+			IntPtr procAddr = NativeMethods.GetProcAddress(pDll, MethodName);
+			T Method = Marshal.GetDelegateForFunctionPointer<T>(procAddr);
+            return Method;
+		}
+
+        public static void ReloadState()
         {
 			var path = Path.Combine(RtcCore.workingDir, "SESSION", "Dolphintmp.savestat");
 			SyncObjectSingleton.EmuThreadExecute(() =>
@@ -126,6 +178,7 @@ namespace DolphinVanguard_Hook
 		public static byte VM_READB(long addr, uint buf)
         {
 			return Vanguard_peekbyte(addr);
+			
 		}
 		public static void VM_WRITEB(long addr, byte buf)
 		{
@@ -137,7 +190,7 @@ namespace DolphinVanguard_Hook
         }
 		public static void LoadVMState(string filename)
 		{
-			Vanguard_loadsavestate(filename);
+            Vanguard_loadsavestate(filename);
 		}
 		public static string GetStateName()
         {
@@ -159,7 +212,7 @@ namespace DolphinVanguard_Hook
 			return path;
 		}
 
-		public static bool LoadSavestate(string path, StashKeySavestateLocation stateLocation = StashKeySavestateLocation.DEFAULTVALUE)
+        public static bool LoadSavestate(string path, StashKeySavestateLocation stateLocation = StashKeySavestateLocation.DEFAULTVALUE)
 		{
 			StepActions.ClearStepBlastUnits();
 			RtcClock.ResetCount();
@@ -187,9 +240,10 @@ namespace DolphinVanguard_Hook
         {
 			return "";
         }
-		//[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
-		//delegate
-		public static RTCV.Vanguard.VanguardConnector connector = null;
+
+        //[UnmanagedFunctionPointer(CallingConvention.StdCall, SetLastError = true)]
+        //delegate
+        public static RTCV.Vanguard.VanguardConnector connector = null;
         public static void StartClient()
         {
             try
@@ -200,9 +254,9 @@ namespace DolphinVanguard_Hook
                 spec.Attached = VanguardCore.attached;
                 spec.MessageReceived += OnMessageRecieved;
                 connector = new RTCV.Vanguard.VanguardConnector(spec);
-				//while(true)
-    //            {
-    //            }
+                //while(true)
+                //            {
+                //            }
             }
             catch (Exception ex)
             {
@@ -216,14 +270,14 @@ namespace DolphinVanguard_Hook
             connector = null;
             StartClient();
         }
-		public static void StopClient()
-		{
-			connector?.Kill();
-			connector = null;
-		}
-		public static void RefreshDomains()
+        public static void StopClient()
         {
-			if (VanguardImplementation.connector.netcoreStatus != RTCV.NetCore.Enums.NetworkStatus.CONNECTED)
+            connector?.Kill();
+            connector = null;
+        }
+        public static void RefreshDomains()
+        {
+			if (connector.netcoreStatus != RTCV.NetCore.Enums.NetworkStatus.CONNECTED)
                 return;
 			PartialSpec gameDone = new PartialSpec("VanguardSpec");
 			gameDone[VSPEC.MEMORYDOMAINS_INTERFACES] = GetInterfaces();
@@ -242,7 +296,7 @@ namespace DolphinVanguard_Hook
             return interfaces.ToArray();
 			
         }
-        private static void OnMessageRecieved(object sender, NetCoreEventArgs e)
+        public static void OnMessageRecieved(object sender, NetCoreEventArgs e)
         {
             var message = e.message;
             var simpleMessage = message as NetCoreSimpleMessage;
@@ -285,7 +339,7 @@ namespace DolphinVanguard_Hook
 					}
 					break;
 				case RTCV.NetCore.Commands.Remote.PreCorruptAction:
-					SyncObjectSingleton.EmuThreadExecute(Vanguard_pause, true);
+					SyncObjectSingleton.EmuThreadExecute(Vanguard_pause(), true);
 					break;
 
 				case RTCV.NetCore.Commands.Remote.PostCorruptAction:
