@@ -1,5 +1,5 @@
 ﻿
-namespace RPCS3Vanguard_Hook
+namespace Vanguard_Hook
 {
     partial class AnchorForm
     {

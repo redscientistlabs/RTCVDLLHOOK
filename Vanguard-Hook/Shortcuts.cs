@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DolphinVanguard_Hook
+namespace Vanguard_Hook
 {
     class Shortcuts //I'm calling this class "Shortcuts" because it contains "shortcuts" to other functions
     {

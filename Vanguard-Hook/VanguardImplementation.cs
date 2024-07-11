@@ -19,10 +19,10 @@ using RTCV.Common.CustomExtensions;
 using RTCV.CorruptCore.Extensions;
 using System.Reflection;
 using Newtonsoft.Json;
-using static DolphinVanguard_Hook.VanguardCore;
+using static Vanguard_Hook.VanguardCore;
 using System.Runtime.InteropServices.ComTypes;
 
-namespace DolphinVanguard_Hook
+namespace Vanguard_Hook
 {
 	public class MemoryDomainSRAMDomain : IMemoryDomain
 	{

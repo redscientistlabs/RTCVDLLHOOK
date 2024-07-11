@@ -19,7 +19,7 @@ using System.Windows.Threading;
 using RTCV.Common;
 using Newtonsoft.Json;
 
-namespace DolphinVanguard_Hook
+namespace Vanguard_Hook
 {
     class VanguardCore
 	{

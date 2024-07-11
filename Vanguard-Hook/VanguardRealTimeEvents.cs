@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RPCS3Vanguard_Hook
+namespace Vanguard_Hook
 {
     class VanguardRealTimeEvents
 	{
