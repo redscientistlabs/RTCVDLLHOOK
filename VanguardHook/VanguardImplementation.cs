@@ -19,10 +19,10 @@ using RTCV.Common.CustomExtensions;
 using RTCV.CorruptCore.Extensions;
 using System.Reflection;
 using Newtonsoft.Json;
-using static Vanguard_Hook.VanguardCore;
+using static VanguardHook.VanguardCore;
 using System.Runtime.InteropServices.ComTypes;
 
-namespace Vanguard_Hook
+namespace VanguardHook
 {
 	public class MemoryDomainSRAMDomain : IMemoryDomain
 	{
@@ -241,6 +241,7 @@ namespace Vanguard_Hook
         public static RTCV.Vanguard.VanguardConnector connector = null;
         public static void StartClient()
         {
+
             try
             {
                 ConsoleEx.WriteLine("Starting Vanguard Client");

@@ -18,8 +18,9 @@ using System.Linq;
 using System.Windows.Threading;
 using RTCV.Common;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
-namespace Vanguard_Hook
+namespace VanguardHook
 {
     class VanguardCore
 	{
@@ -75,16 +76,14 @@ namespace Vanguard_Hook
 			get => (MemoryDomainProxy[])AllSpec.VanguardSpec[VSPEC.MEMORYDOMAINS_INTERFACES];
 			set => AllSpec.VanguardSpec.Update(VSPEC.MEMORYDOMAINS_INTERFACES, value);
 		}
-		public static string emuDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-		public static string logPath = Path.Combine(emuDir, "EMU_LOG.txt");
+		
+		public static string logPath = Path.Combine(VSpecConfig.emuDir, "EMU_LOG.txt");
 		public static string RTCVHookOGLVersion = "0.0.1";
-
-
-
 
         public class VSpecConfig
         {
-            public static VSpecConfig config = JsonConvert.DeserializeObject<VSpecConfig>(File.ReadAllText("VanguardSpec.Json"));
+			public static string emuDir = "";
+            public static VSpecConfig config = JsonConvert.DeserializeObject<VSpecConfig>(File.ReadAllText(emuDir + "VanguardSpec.Json"));
             public string EmuEXE { get; set; }
             public string NAME {  get; set; }
 			public string OVERRIDE_DEFAULTMAXINTENSITY { get; set; }
@@ -97,7 +96,6 @@ namespace Vanguard_Hook
 			public bool SUPPORTS_REFERENCES { get; set; }
 			public bool SUPPORTS_MIXED_STOCKPILE { get; set; }
 		}
-		
         public static PartialSpec getDefaultPartial()
         {
 			//read config file and store the values
@@ -121,7 +119,7 @@ namespace Vanguard_Hook
             partial[VSPEC.SUPPORTS_REFERENCES] = VSpecConfig.config.SUPPORTS_REFERENCES;
             partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = VSpecConfig.config.SUPPORTS_MIXED_STOCKPILE;
             partial[VSPEC.CONFIG_PATHS] = new[] { "" };
-			partial[VSPEC.EMUDIR] = emuDir;
+			partial[VSPEC.EMUDIR] = VSpecConfig.emuDir;
 
             return partial;
 			
@@ -212,7 +210,7 @@ namespace Vanguard_Hook
             }
 			return true;
         }
-        public static void Start()
+        public static void Start(string emuDir)
 		{
 			//SyncForm = new AnchorForm();
 			//         //Grab an object on the main thread to use for netcore invokes
@@ -233,6 +231,8 @@ namespace Vanguard_Hook
 			SyncForm.Activate();
 			ConsoleHelper.CreateConsole();
 			ConsoleHelper.ShowConsole();
+            VanguardCore.VSpecConfig.emuDir = emuDir + "\\";
+            ConsoleEx.WriteLine(VSpecConfig.emuDir);
             //Start everything
             VanguardImplementation.StartClient();
 			VanguardCore.RegisterVanguardSpec();
@@ -273,4 +273,6 @@ namespace Vanguard_Hook
 		}
 
 	}
+
 }
+

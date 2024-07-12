@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UI", "..\RTCV\Source\Fronte
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementations", "Implementations", "{1ADE7685-6FFC-4AAD-B218-9E9E5A3DE339}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolphinVanguard-Hook", "Vanguard-Hook\DolphinVanguard-Hook.csproj", "{78A00935-3E62-4549-8D73-9FC7A570918C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VanguardHook", "VanguardHook\VanguardHook.csproj", "{78A00935-3E62-4549-8D73-9FC7A570918C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

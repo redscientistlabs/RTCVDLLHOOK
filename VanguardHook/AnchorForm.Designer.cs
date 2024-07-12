@@ -1,5 +1,5 @@
 ﻿
-namespace Vanguard_Hook
+namespace VanguardHook
 {
     partial class AnchorForm
     {
