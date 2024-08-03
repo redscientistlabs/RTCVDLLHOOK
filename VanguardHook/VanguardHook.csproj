@@ -4,23 +4,24 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7898A767-A421-4A4F-92C1-D87433D2876F}</ProjectGuid>
+    <ProjectGuid>{78A00935-3E62-4549-8D73-9FC7A570918C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RetroarchVanguard_Hook</RootNamespace>
-    <AssemblyName>RetroarchVanguard-Hook</AssemblyName>
+    <RootNamespace>VanguardHook</RootNamespace>
+    <AssemblyName>VanguardHook</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,8 +30,14 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -54,8 +61,9 @@
     <Compile Include="AnchorForm.Designer.cs">
       <DependentUpon>AnchorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="VanguardJsonParsing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Shortcuts.cs" />
+    <Compile Include="VanguardMethodInterchange.cs" />
     <Compile Include="VanguardCore.cs" />
     <Compile Include="VanguardImplementation.cs" />
     <Compile Include="VanguardRealTimeEvents.cs" />
@@ -83,12 +91,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="AnchorForm.resx">
       <DependentUpon>AnchorForm.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -102,10 +110,10 @@
   <PropertyGroup>
     <DllExportIdent>2E75296F-2DF2-4D88-9ECD-4D7B8A19B2F4</DllExportIdent>
     <DllExportMetaLibName>DllExport.dll</DllExportMetaLibName>
-    <DllExportNamespace>RetroarchVanguard_Hook</DllExportNamespace>
+    <DllExportNamespace>VanguardHook</DllExportNamespace>
     <DllExportDDNSCecil>true</DllExportDDNSCecil>
     <DllExportSkipOnAnyCpu>false</DllExportSkipOnAnyCpu>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DllExportPlatform>Auto</DllExportPlatform>
     <DllExportOrdinalsBase>1</DllExportOrdinalsBase>
     <DllExportGenExpLib>true</DllExportGenExpLib>
     <DllExportOurILAsm>true</DllExportOurILAsm>

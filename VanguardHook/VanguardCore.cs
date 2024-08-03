@@ -4,32 +4,30 @@ using RTCV.NetCore;
 using RTCV.NetCore.Commands;
 using RTCV.Vanguard;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
+using System.Text;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
-using System.Diagnostics;
-using Timer = System.Threading.Timer;
-using System.Linq;
 using System.Windows.Threading;
-//using System.Windows.Threading;
+using RTCV.Common;
 
-namespace RPCS3Vanguard_Hook
+namespace VanguardHook
 {
+
+    public static class EmuDirectory
+    {
+        public static string emuDir;
+        public static string logPath;
+        public static string emuEXE;
+    }
+
     class VanguardCore
 	{
-		
-		public static string[] args;
         public static System.Timers.Timer focusTimer;
         public static bool FirstConnect = true;
 		public static Form SyncForm;
         public static VanguardRealTimeEvents RTE_API = new VanguardRealTimeEvents();
         public static bool attached = false;
-		public static Process xemu;
 		public static string System
 		{
 			get => (string)AllSpec.VanguardSpec[VSPEC.SYSTEM];
@@ -75,49 +73,56 @@ namespace RPCS3Vanguard_Hook
 			get => (MemoryDomainProxy[])AllSpec.VanguardSpec[VSPEC.MEMORYDOMAINS_INTERFACES];
 			set => AllSpec.VanguardSpec.Update(VSPEC.MEMORYDOMAINS_INTERFACES, value);
 		}
-		public static string emuDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-		public static string logPath = Path.Combine(emuDir, "EMU_LOG.txt");
+
 		public static string RTCVHookOGLVersion = "0.0.1";
-		
+
+		// Loads config file data and returns a partially built spec for when Vanguard first connects
         public static PartialSpec getDefaultPartial()
         {
-			var partial = new PartialSpec("VanguardSpec");
-			partial[VSPEC.NAME] = "RPCS3";
-			partial[VSPEC.SYSTEM] = "PS3";
-			partial[VSPEC.GAMENAME] = "IGNORE";
-			partial[VSPEC.SYSTEMPREFIX] = "PS3";
-			partial[VSPEC.OPENROMFILENAME] = "IGNORE";
+            PartialSpec partial = new PartialSpec("VanguardSpec");
+            // Read config and blacklisted domains files and store their values
+            var config = VanguardConfigReader.configFile.VSpecConfig;
+			var blacklistedDomainsConfig = VanguardBlacklistedDomains.domains;
+            partial[VSPEC.NAME] = config.NAME;
+            partial[VSPEC.SYSTEM] = String.Empty;
+			partial[VSPEC.GAMENAME] = String.Empty;
+			partial[VSPEC.SYSTEMPREFIX] = String.Empty;
+			partial[VSPEC.OPENROMFILENAME] = String.Empty;
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
-			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = 1000000;
-			partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = new string[] { };
+            partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = config.OVERRIDE_DEFAULTMAXINTENSITY;
+            partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = blacklistedDomainsConfig.MEMORYDOMAINS_BLACKLISTEDDOMAINS;
 			partial[VSPEC.MEMORYDOMAINS_INTERFACES] = new MemoryDomainProxy[] { };
 			partial[VSPEC.CORE_LASTLOADERROM] = -1;
-			partial[VSPEC.SUPPORTS_RENDERING] = false;
-			partial[VSPEC.SUPPORTS_CONFIG_MANAGEMENT] = true;
-			partial[VSPEC.SUPPORTS_CONFIG_HANDOFF] = true;
-			partial[VSPEC.SUPPORTS_KILLSWITCH] = true;
-			partial[VSPEC.SUPPORTS_REALTIME] = true;
-			partial[VSPEC.SUPPORTS_SAVESTATES] = true;
-			partial[VSPEC.SUPPORTS_REFERENCES] = true;
-			partial[VSPEC.CORE_DISKBASED] = false;
-			partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = true;
-			partial[VSPEC.CONFIG_PATHS] = new[] { "" };
-			partial[VSPEC.EMUDIR] = emuDir;
-			return partial;
+            partial[VSPEC.SUPPORTS_RENDERING] = config.SUPPORTS_RENDERING;
+            partial[VSPEC.SUPPORTS_CONFIG_MANAGEMENT] = config.SUPPORTS_CONFIG_MANAGEMENT;
+            partial[VSPEC.SUPPORTS_CONFIG_HANDOFF] = config.SUPPORTS_CONFIG_HANDOFF;
+            partial[VSPEC.SUPPORTS_KILLSWITCH] = config.SUPPORTS_KILLSWITCH;
+            partial[VSPEC.SUPPORTS_REALTIME] = config.SUPPORTS_REALTIME;
+            partial[VSPEC.SUPPORTS_SAVESTATES] = config.SUPPORTS_SAVESTATES;
+            partial[VSPEC.SUPPORTS_REFERENCES] = config.SUPPORTS_REFERENCES;
+            partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = config.SUPPORTS_MIXED_STOCKPILE;
+			partial[VSPEC.CORE_DISKBASED] = config.CORE_DISKBASED;
+            partial[VSPEC.CONFIG_PATHS] = new[] { "" };
+			partial[VSPEC.EMUDIR] = EmuDirectory.emuDir;
+			EmuDirectory.emuEXE = config.EmuEXE;
+            EmuDirectory.logPath = Path.Combine(EmuDirectory.emuDir, "EMU_LOG.txt");
+
+            return partial;
         }
-		internal static void CreateVmdText(string domain, string text)
-        {
-			LocalNetCoreRouter.Route(Endpoints.UI, Remote.GenerateVMDText, new object[] { domain, text }, false);
-        }
+
+		// Registers the initial spec and pushes it to the CorruptCore and UI
 		public static void RegisterVanguardSpec()
         {
 			PartialSpec emuSpecTemplate = new PartialSpec("VanguardSpec");
 			emuSpecTemplate.Insert(VanguardCore.getDefaultPartial());
 			AllSpec.VanguardSpec = new FullSpec(emuSpecTemplate, !RtcCore.Attached);
-
 			if (VanguardCore.attached)
 				VanguardConnector.PushVanguardSpecRef(AllSpec.VanguardSpec);
-			LocalNetCoreRouter.Route(Endpoints.CorruptCore, Remote.PushVanguardSpec, emuSpecTemplate, true);
+            // also update the RtcCore directory for the killswitch
+			// have to update it here because CorruptCore checks the AllSpec,
+			// and I'm not changing that code
+            RtcCore.EmuDir = EmuDirectory.emuDir;
+            LocalNetCoreRouter.Route(Endpoints.CorruptCore, Remote.PushVanguardSpec, emuSpecTemplate, true);
 			LocalNetCoreRouter.Route(Endpoints.UI, Remote.PushVanguardSpec, emuSpecTemplate, true);
 
 			AllSpec.VanguardSpec.SpecUpdated += new EventHandler<SpecUpdateEventArgs>(OnVanguardSpecOnSpecUpdated);
@@ -125,7 +130,6 @@ namespace RPCS3Vanguard_Hook
 		private static void OnVanguardSpecOnSpecUpdated(object o, SpecUpdateEventArgs e)
 		{
 			PartialSpec partial = e.partialSpec;
-
 
 			LocalNetCoreRouter.Route(RTCV.NetCore.Endpoints.CorruptCore, RTCV.NetCore.Commands.Remote.PushVanguardSpecUpdate, partial, true);
 			LocalNetCoreRouter.Route(RTCV.NetCore.Endpoints.UI, RTCV.NetCore.Commands.Remote.PushVanguardSpecUpdate, partial, true);
@@ -138,79 +142,66 @@ namespace RPCS3Vanguard_Hook
 			}, null);
 
 		}
-		public static void LOAD_GAME_START(string rompath)
-        {
-			StepActions.ClearStepBlastUnits();
-			RtcClock.ResetCount();
-			VanguardImplementation.LoadROM(rompath);
-			LOAD_GAME_DONE();
-        }
-		public static void LOAD_GAME_DONE()
-		{
-			PartialSpec gameDone = new PartialSpec("VanguardSpec");
-			VanguardImplementation.RefreshDomains();
-			gameDone[VSPEC.GAMENAME] = VanguardImplementation.GetGameName();
-			//gameDone[VSPEC.OPENROMFILENAME] = VanguardImplementation.GetDVD();
-			AllSpec.VanguardSpec.Update(gameDone);
-			RtcCore.InvokeLoadGameDone();
-		}
-		public static void Start()
-		{
-			//SyncForm = new AnchorForm();
-			//         //Grab an object on the main thread to use for netcore invokes
-			//         Dispatcher.CurrentDispatcher.Invoke((MethodInvoker)delegate
-			//         {
-			//             SyncForm.Activate();
 
-			//         }, null);
-			//         //IntPtr Handle = SyncForm.Handle;
-			//SyncObjectSingleton.SyncObject = SyncForm;
-			SyncForm = new AnchorForm();
+        public static void Start()
+		{
+
+
+            SyncForm = new AnchorForm();
 			var handle = SyncForm.Handle;
-			SyncObjectSingleton.SyncObject = SyncForm;
+            SyncObjectSingleton.SyncObject = SyncForm;
 
-			//SyncObjectSingleton.EmuInvokeDelegate = new SyncObjectSingleton.ActionDelegate(EmuThreadExecute);
-			SyncObjectSingleton.EmuThreadIsMainThread = true;
-			SyncForm.Show();
+            SyncObjectSingleton.EmuThreadIsMainThread = true;
+			//SyncForm.Show();
 			SyncForm.Activate();
-			//Start everything
-			VanguardImplementation.StartClient();
-			VanguardCore.RegisterVanguardSpec();
-			RtcCore.StartEmuSide();
-			Thread.Sleep(500);
-			focusTimer = new System.Timers.Timer
+			ConsoleHelper.CreateConsole();
+			ConsoleHelper.HideConsole();
+
+            EmuDirectory.emuDir = EmuDirectory.emuDir + "\\";
+            //Start everything
+            VanguardImplementation.StartClient();
+            VanguardCore.RegisterVanguardSpec();
+            Thread.Sleep(500);
+            RtcCore.StartEmuSide();
+
+            focusTimer = new System.Timers.Timer
 			{
 				AutoReset = true,
 				Interval = 250
 			};
+
 			//Update the focus state of the emulator
 			focusTimer.Elapsed += (sender, eventArgs) =>
 			{
-				if (VanguardCore.attached)
-				{
-					focusTimer.Enabled = false;
-					return;
-				}
 				if (VanguardImplementation.connector.netConn.status == RTCV.NetCore.Enums.NetworkStatus.CONNECTED)
 				{
-					var state = Form.ActiveForm != null;
-					//Console.WriteLine(state);
-					//Shortcuts.STEP_CORRUPT();
+					// get the current foreground window
+                    IntPtr hWnd = NativeMethods.GetForegroundWindow();
+
+					// get length of the path the emulator is running from
+					int EmuWinLen = AllSpec.VanguardSpec[VSPEC.EMUDIR].ToString().Length + EmuDirectory.emuEXE.Length + 1;
+                    StringBuilder EmuWinPath = new StringBuilder(EmuWinLen);
+
+                    // get the processID of the window, then get the full path name
+                    uint processID;
+                    NativeMethods.GetWindowThreadProcessId(hWnd, out processID);
+                    IntPtr hProcess = NativeMethods.OpenProcess(0x0410, false, processID);
+                    NativeMethods.GetModuleFileNameEx(hProcess, IntPtr.Zero, EmuWinPath, EmuWinLen);
+                    string exeName = EmuWinPath.ToString().Substring(EmuWinPath.ToString().LastIndexOf("\\") + 1);
+
+					var state = (exeName == EmuDirectory.emuEXE ? true : false);
+
 					if (((bool?)RTCV.NetCore.AllSpec.VanguardSpec?[RTCV.NetCore.Commands.Emulator.InFocus] ?? true) != state)
 						RTCV.NetCore.AllSpec.VanguardSpec?.Update(RTCV.NetCore.Commands.Emulator.InFocus, state, true, false);
 				}
 			};
 			focusTimer.Start();
-
-
-			//Force create bizhawk config file if it doesn't exist
-			//if (!File.Exists(CorruptCore.bizhawkDir + Path.DirectorySeparatorChar + "config.ini"))
-			//Hooks.BIZHAWK_MAINFORM_SAVECONFIG();
-
-			//If it's attached, lie to vanguard
-			if (VanguardCore.attached)
-				VanguardConnector.ImplyClientConnected();
 		}
 
+		public static void StopGame()
+		{
+			MethodImports.Vanguard_forceStop();
+        }
 	}
 }
+

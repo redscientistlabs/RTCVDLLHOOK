@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace RPCS3Vanguard_Hook
+namespace VanguardHook
 {
     public partial class AnchorForm : Form
     {
