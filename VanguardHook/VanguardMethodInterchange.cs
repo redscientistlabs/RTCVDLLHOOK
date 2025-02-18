@@ -4,6 +4,7 @@ using RTCV.CorruptCore.Extensions;
 using RTCV.NetCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -94,7 +95,21 @@ namespace VanguardHook
                 rompath = GAME_TO_LOAD;
                 GAME_TO_LOAD = "";
             }
+
+            var defaultSettingsPath = Path.Combine(RtcCore.workingDir, "SESSION", "VanguardDefaultSettings");
+            string default_settings;
+
+            //If the default settings file is still here somehow, delete it before creating a new one
+            if (File.Exists(defaultSettingsPath))
+            {
+                File.Delete(defaultSettingsPath);
+            }
+
+            //Safe the emulator settings to a file
+            VanguardCore.SaveEmuSettings();
+
             AllSpec.VanguardSpec.Update(VSPEC.OPENROMFILENAME, rompath, true, true);
+            ConsoleEx.WriteLine(AllSpec.VanguardSpec[VSPEC.OPENROMFILENAME].ToString());
         }
         
         // Called when a game succesfully finishes loading on the emulator. Finishes updating the
@@ -118,25 +133,23 @@ namespace VanguardHook
             PartialSpec gameDone = new PartialSpec("VanguardSpec");
             gameDone[VSPEC.SYSTEM] = VanguardConfigReader.configFile.VSpecConfig.NAME;
             gameDone[VSPEC.SYSTEMPREFIX] = VanguardConfigReader.configFile.VSpecConfig.NAME;
-
-            //We need this code to be able to choose between Wii and Gamecube for Dolphin
-            if (VanguardConfigReader.configFile.VSpecConfig.PROFILE == "Dolphin")
-            {
-                if (MethodImports.Vanguard_isWii())
-                    gameDone[VSPEC.SYSTEMCORE] = "Wii";
-
-                else
-                    gameDone[VSPEC.SYSTEMCORE] = "Gamecube";
-            }
-            else
-                gameDone[VSPEC.SYSTEMCORE] = VanguardConfigReader.configFile.VSpecConfig.PROFILE;
-
             gameDone[VSPEC.SYNCSETTINGS] = "";
 
             // remove any invalid file characters before storing it
             string gamenameFixed = StringExtensions.MakeSafeFilename(gamename, '-');
 
             gameDone[VSPEC.GAMENAME] = gamenameFixed;
+
+            if (gamenameFixed != AllSpec.VanguardSpec[VSPEC.GAMENAME].ToString())
+            {
+                IntPtr systemCorePtr = MethodImports.Vanguard_getSystemCore();
+                var systemCore = Marshal.PtrToStringAnsi(systemCorePtr);
+                //Make sure to free the pointer after using it
+                Marshal.FreeHGlobal(systemCorePtr);
+                gameDone[VSPEC.SYSTEMCORE] = systemCore;
+                ConsoleEx.WriteLine(systemCore);
+            }
+
             AllSpec.VanguardSpec.Update(gameDone);
             VanguardImplementation.RefreshDomains();
             RtcCore.InvokeLoadGameDone();
@@ -148,11 +161,23 @@ namespace VanguardHook
         [DllExport("GAMECLOSED")]
         public static void GAMECLOSED()
         {
+            ConsoleEx.WriteLine("GAMECLOSED");
             PartialSpec gameClosed = new PartialSpec("VanguardSpec");
             gameClosed[VSPEC.OPENROMFILENAME] = "";
             AllSpec.VanguardSpec.Update(gameClosed);
-            VanguardImplementation.RefreshDomains();
             RtcCore.InvokeGameClosed(true);
+
+            //Load the default settings after closing a game to remove any temporary changes
+            VanguardCore.LoadEmuSettings();
+
+            // If we're closing the emulator, don't refresh the domains or else it will hang
+            if (VanguardImplementation.waitForEmulatorClose)
+            {
+                ConsoleEx.WriteLine("closing Vanguard");
+                VanguardCore.StopVanguard();
+            }
+            else
+                VanguardImplementation.RefreshDomains();
         }
 
 
@@ -169,7 +194,7 @@ namespace VanguardHook
         [DllExport("RTCOSDENABLED")]
         public static bool RTCOSDENABLED()
         {
-            if (VanguardImplementation.enableRTC)
+            if (!VanguardImplementation.enableRTC)
             {
                 return true;
             }
@@ -258,9 +283,14 @@ namespace VanguardHook
         public delegate void VforceStop();
         public static VforceStop Vanguard_forceStop = GetMethod<VforceStop>("Vanguard_forceStop");
 
-        // This is a Dolphin exclusive method
-        public delegate bool VisWii();
-        public static VisWii Vanguard_isWii = GetMethod<VisWii>("Vanguard_isWii");
+        public delegate IntPtr VgetSystemCore();
+        public static VgetSystemCore Vanguard_getSystemCore = GetMethod<VgetSystemCore>("Vanguard_getSystemCore");
+
+        public delegate IntPtr VsaveEmuSettings();
+        public static VsaveEmuSettings Vanguard_saveEmuSettings = GetMethod<VsaveEmuSettings>("Vanguard_saveEmuSettings");
+
+        public delegate void VloadEmuSettings([MarshalAs(UnmanagedType.BStr)] string settings);
+        public static VloadEmuSettings Vanguard_loadEmuSettings = GetMethod<VloadEmuSettings>("Vanguard_loadEmuSettings");
 
         // loads the emulator exe and returns a pointer for importing exported functions
         public static IntPtr LoadEmuPointer()

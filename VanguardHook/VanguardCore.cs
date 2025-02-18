@@ -10,6 +10,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using RTCV.Common;
+using System.Runtime.InteropServices;
 
 namespace VanguardHook
 {
@@ -28,7 +29,10 @@ namespace VanguardHook
 		public static Form SyncForm;
         public static VanguardRealTimeEvents RTE_API = new VanguardRealTimeEvents();
         public static bool attached = false;
-		public static string System
+		public static bool connected = false;
+		public static PartialSpec emuSpecTemplate = new PartialSpec("VanguardSpec");
+
+        public static string System
 		{
 			get => (string)AllSpec.VanguardSpec[VSPEC.SYSTEM];
 			set => AllSpec.VanguardSpec.Update(VSPEC.SYSTEM, value);
@@ -83,29 +87,29 @@ namespace VanguardHook
             // Read config and blacklisted domains files and store their values
             var config = VanguardConfigReader.configFile.VSpecConfig;
 			var blacklistedDomainsConfig = VanguardBlacklistedDomains.domains;
-            partial[VSPEC.NAME] = config.NAME;
-            partial[VSPEC.SYSTEM] = String.Empty;
+			partial[VSPEC.NAME] = config.NAME;
+			partial[VSPEC.SYSTEM] = String.Empty;
 			partial[VSPEC.GAMENAME] = String.Empty;
 			partial[VSPEC.SYSTEMPREFIX] = String.Empty;
 			partial[VSPEC.OPENROMFILENAME] = String.Empty;
 			partial[VSPEC.SYNCSETTINGS] = String.Empty;
-            partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = config.OVERRIDE_DEFAULTMAXINTENSITY;
-            partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = blacklistedDomainsConfig.MEMORYDOMAINS_BLACKLISTEDDOMAINS;
+			partial[VSPEC.OVERRIDE_DEFAULTMAXINTENSITY] = config.OVERRIDE_DEFAULTMAXINTENSITY;
+			partial[VSPEC.MEMORYDOMAINS_BLACKLISTEDDOMAINS] = blacklistedDomainsConfig.MEMORYDOMAINS_BLACKLISTEDDOMAINS;
 			partial[VSPEC.MEMORYDOMAINS_INTERFACES] = new MemoryDomainProxy[] { };
 			partial[VSPEC.CORE_LASTLOADERROM] = -1;
-            partial[VSPEC.SUPPORTS_RENDERING] = config.SUPPORTS_RENDERING;
-            partial[VSPEC.SUPPORTS_CONFIG_MANAGEMENT] = config.SUPPORTS_CONFIG_MANAGEMENT;
-            partial[VSPEC.SUPPORTS_CONFIG_HANDOFF] = config.SUPPORTS_CONFIG_HANDOFF;
-            partial[VSPEC.SUPPORTS_KILLSWITCH] = config.SUPPORTS_KILLSWITCH;
-            partial[VSPEC.SUPPORTS_REALTIME] = config.SUPPORTS_REALTIME;
-            partial[VSPEC.SUPPORTS_SAVESTATES] = config.SUPPORTS_SAVESTATES;
-            partial[VSPEC.SUPPORTS_REFERENCES] = config.SUPPORTS_REFERENCES;
-            partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = config.SUPPORTS_MIXED_STOCKPILE;
+			partial[VSPEC.SUPPORTS_RENDERING] = config.SUPPORTS_RENDERING;
+			partial[VSPEC.SUPPORTS_CONFIG_MANAGEMENT] = config.SUPPORTS_CONFIG_MANAGEMENT;
+			partial[VSPEC.SUPPORTS_CONFIG_HANDOFF] = config.SUPPORTS_CONFIG_HANDOFF;
+			partial[VSPEC.SUPPORTS_KILLSWITCH] = config.SUPPORTS_KILLSWITCH;
+			partial[VSPEC.SUPPORTS_REALTIME] = config.SUPPORTS_REALTIME;
+			partial[VSPEC.SUPPORTS_SAVESTATES] = config.SUPPORTS_SAVESTATES;
+			partial[VSPEC.SUPPORTS_REFERENCES] = config.SUPPORTS_REFERENCES;
+			partial[VSPEC.SUPPORTS_MIXED_STOCKPILE] = config.SUPPORTS_MIXED_STOCKPILE;
 			partial[VSPEC.CORE_DISKBASED] = config.CORE_DISKBASED;
-            partial[VSPEC.CONFIG_PATHS] = new[] { "" };
+			partial[VSPEC.CONFIG_PATHS] = new[] { "" };
 			partial[VSPEC.EMUDIR] = EmuDirectory.emuDir;
 			EmuDirectory.emuEXE = config.EmuEXE;
-            EmuDirectory.logPath = Path.Combine(EmuDirectory.emuDir, "EMU_LOG.txt");
+			EmuDirectory.logPath = Path.Combine(EmuDirectory.emuDir, "EMU_LOG.txt");
 
             return partial;
         }
@@ -113,15 +117,6 @@ namespace VanguardHook
 		// Registers the initial spec and pushes it to the CorruptCore and UI
 		public static void RegisterVanguardSpec()
         {
-			PartialSpec emuSpecTemplate = new PartialSpec("VanguardSpec");
-			emuSpecTemplate.Insert(VanguardCore.getDefaultPartial());
-			AllSpec.VanguardSpec = new FullSpec(emuSpecTemplate, !RtcCore.Attached);
-			if (VanguardCore.attached)
-				VanguardConnector.PushVanguardSpecRef(AllSpec.VanguardSpec);
-            // also update the RtcCore directory for the killswitch
-			// have to update it here because CorruptCore checks the AllSpec,
-			// and I'm not changing that code
-            RtcCore.EmuDir = EmuDirectory.emuDir;
             LocalNetCoreRouter.Route(Endpoints.CorruptCore, Remote.PushVanguardSpec, emuSpecTemplate, true);
 			LocalNetCoreRouter.Route(Endpoints.UI, Remote.PushVanguardSpec, emuSpecTemplate, true);
 
@@ -145,8 +140,6 @@ namespace VanguardHook
 
         public static void Start()
 		{
-
-
             SyncForm = new AnchorForm();
 			var handle = SyncForm.Handle;
             SyncObjectSingleton.SyncObject = SyncForm;
@@ -159,8 +152,16 @@ namespace VanguardHook
 
             EmuDirectory.emuDir = EmuDirectory.emuDir + "\\";
             //Start everything
+
+			//Create the FullSpec template for the AllSpec before starting the client connection
+            emuSpecTemplate.Insert(VanguardCore.getDefaultPartial());
+            AllSpec.VanguardSpec = new FullSpec(emuSpecTemplate, !RtcCore.Attached);
+            if (VanguardCore.attached)
+                VanguardConnector.PushVanguardSpecRef(AllSpec.VanguardSpec);
+            RtcCore.EmuDir = EmuDirectory.emuDir;
+
             VanguardImplementation.StartClient();
-            VanguardCore.RegisterVanguardSpec();
+
             Thread.Sleep(500);
             RtcCore.StartEmuSide();
 
@@ -202,6 +203,60 @@ namespace VanguardHook
 		{
 			MethodImports.Vanguard_forceStop();
         }
-	}
+
+		// Stops the connection to the RTC client and terminates the hook
+        public static void StopVanguard()
+        {
+            VanguardImplementation.StopClient();
+            RtcCore.InvokeGameClosed(true);
+
+
+            Environment.Exit(-1);
+        }
+
+		public static void SaveEmuSettings()
+		{
+            var defaultSettingsPath = Path.Combine(RtcCore.workingDir, "SESSION", (string)AllSpec.VanguardSpec[VSPEC.NAME] + "VanguardDefaultSettings");
+
+            //Get the settings from the emulator and save them to a file
+            PartialSpec storeDefaultSettings = new PartialSpec("VanguardSpec");
+            IntPtr settingsPtr = MethodImports.Vanguard_saveEmuSettings();
+
+            string default_settings = Marshal.PtrToStringAnsi(settingsPtr);
+            //Make sure to free the pointer after using it
+            Marshal.FreeHGlobal(settingsPtr);
+
+            using (StreamWriter writetext = new StreamWriter(defaultSettingsPath))
+            {
+                writetext.WriteLine(default_settings);
+                ConsoleEx.WriteLine("default settings stored: \n" + default_settings);
+            }
+
+            AllSpec.VanguardSpec.Update(storeDefaultSettings);
+        }
+
+		public static void LoadEmuSettings()
+		{
+            var defaultSettingsPath = Path.Combine(RtcCore.workingDir, "SESSION", (string)AllSpec.VanguardSpec[VSPEC.NAME] + "VanguardDefaultSettings");
+			ConsoleEx.WriteLine("checking for " + defaultSettingsPath);
+			if (File.Exists(defaultSettingsPath))
+			{
+				string default_settings;
+				using (StreamReader readtext = new StreamReader(defaultSettingsPath))
+				{
+					default_settings = readtext.ReadToEnd();
+					ConsoleEx.WriteLine("loading default settings: \n" + default_settings);
+					MethodImports.Vanguard_loadEmuSettings(default_settings);
+
+				}
+
+				//Remove the file after we're done with it 
+				File.Delete(defaultSettingsPath);
+				ConsoleEx.WriteLine("file deleted");
+			}
+			else
+				ConsoleEx.WriteLine("file not found");
+        }
+    }
 }
 
